@@ -39,3 +39,12 @@
 - `workflow/state.py`
 - `business/**/ports.py`
 - `business/**/infrastructure/*`
+
+## 常见反模式提醒
+- 不要把 `capabilities` 做成伪共享业务层。
+- 不要让业务逻辑下沉到 `infrastructure/`。
+- 不要让 `service.py` 直接调用 SDK、HTTP client 或 ORM。
+- 不要通过 `shared/` 传播业务耦合。
+- 不要让 workflow 层承载业务实现。
+- 不要把 workflow state 变成隐式万能上下文。
+- 不要在业务代码中分散做实现选择，local / remote / mock / provider 切换应集中在 `bootstrap` 或边界适配区。

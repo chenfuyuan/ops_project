@@ -74,6 +74,20 @@ business/<domain>/
 
 并不是每个文件都必须存在，但职责边界必须保持一致。
 
+## `domain_services/` 的适用边界
+`domain_services/` 是可选目录，只用于承载同一业务域内多个节点共享、但不具备跨业务复用价值的领域级逻辑。
+
+适合放入：
+- 同一业务域内多个节点共用的领域策略与组装逻辑
+- 领域级工厂、策略集合、校验器组合
+- 仅在当前业务域内有意义、不适合进入 `shared` 或 `capabilities` 的组件
+
+不适合放入：
+- 纯通用能力，应进入 `capabilities`
+- 全局基础设施，应进入 `shared`
+- 单个节点私有逻辑，应保留在节点内部
+- 对外部系统的直接适配，应优先放在节点内 `infrastructure/`
+
 ## workflow 与 node 的职责
 ### `workflow/`
 负责流程拓扑、registry、edges 和 state 流转。
