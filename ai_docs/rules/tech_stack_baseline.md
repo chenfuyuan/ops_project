@@ -1,61 +1,61 @@
-# Tech Stack Baseline
+# 技术栈基线
 
-This file defines the default technical baseline for code generation in this repository.
+本文件定义本仓库生成代码时默认采用的技术基线。
 
-## Default stack
+## 默认技术栈
 - Python 3.13
-- `uv` with `pyproject.toml` and `uv.lock`
-- FastAPI for HTTP APIs
-- Pydantic v2 for request, response, config, and DTO validation
-- SQLAlchemy 2.x for data access
-- Alembic for schema migrations
-- PostgreSQL for core persistent business data
-- Redis for cache, lightweight coordination, and Celery backing services
-- Celery for asynchronous background work
-- S3-compatible object storage for files and large artifacts
+- 使用 `uv`、`pyproject.toml` 和 `uv.lock`
+- HTTP API 使用 FastAPI
+- 请求、响应、配置和 DTO 校验使用 Pydantic v2
+- 数据访问使用 SQLAlchemy 2.x
+- Schema 迁移使用 Alembic
+- PostgreSQL 承载核心持久化业务数据
+- Redis 承载缓存、轻量协调和 Celery 支撑能力
+- Celery 承载异步后台任务
+- S3-compatible object storage 承载文件和大对象产物
 
-## Default runtime shape
-The default runtime topology is:
+## 默认运行形态
+默认运行时拓扑为：
 - API process
 - Worker process
 
-The API process handles synchronous request/response work and task submission.
-The Worker process handles long-running, retryable, batch, or background jobs.
+API process 负责同步请求响应链路和任务投递。
+Worker process 负责耗时、可重试、批处理或后台任务。
 
-## Storage placement rules
-- Core business data goes to PostgreSQL.
-- Short-lived cache and lightweight coordination go to Redis.
-- Files and large binary or text artifacts go to S3-compatible object storage.
-- Structured audit-worthy metadata stays in PostgreSQL.
-- Large payloads should be passed by reference, not embedded in queue messages.
+## 存储落位规则
+- 核心业务数据进入 PostgreSQL。
+- 短生命周期缓存和轻量协调数据进入 Redis。
+- 文件以及大体积二进制或文本产物进入 S3-compatible object storage。
+- 需要结构化、可审计的元数据保留在 PostgreSQL。
+- 大载荷应通过引用传递，而不是直接塞进队列消息。
 
-## Coding implications
-- Do not invent alternative stack choices unless the user asks.
-- Do not introduce extra dependency-management systems alongside `uv`.
-- Do not place implementation selection logic in business code; keep it in `bootstrap`.
-- Do not put external SDK calls directly in `service.py`.
+## 对编码的影响
+- 除非用户明确要求，否则不要自行发散到其他技术栈。
+- 不要在 `uv` 之外再引入额外的依赖管理体系。
+- 不要把实现选择逻辑放进业务代码，应保留在 `bootstrap`。
+- 不要在 `service.py` 中直接写外部 SDK 调用。
 
-## Worker selection rule
-Default to background workers for:
-- long-running external calls
-- file parsing or export/import jobs
-- retryable tasks
-- work that does not need to block the request lifecycle
-- bursty work that benefits from queue-based smoothing
+## Worker 选择规则
+以下场景默认应进入后台 worker：
+- 耗时的外部调用
+- 文件解析、导入或导出任务
+- 可重试任务
+- 不需要阻塞请求生命周期的工作
+- 适合通过队列削峰的突发性工作
 
-## Shared infrastructure baseline
-System-level infrastructure should generally live in `shared/infra`.
-Typical examples include:
-- config loading
-- database connection management
-- logging and tracing wrappers
-- HTTP client wrappers
-- serialization helpers
-- generic retry and timeout wrappers
+## Shared 基础设施基线
+系统级基础设施通常应放在 `shared/infra` 中。
+典型示例包括：
+- 配置加载
+- 数据库连接管理
+- 日志和 tracing 包装
+- HTTP client 包装
+- 序列化辅助
+- 通用 retry 和 timeout 包装
 
-## Bootstrap rule
-`bootstrap` owns:
-- runtime assembly
-- implementation selection
-- local vs remote vs mock wiring
-- process startup composition
+## Bootstrap 规则
+`bootstrap` 负责：
+- 运行时装配
+- 实现选择
+- local / remote / mock 的接线
+- 进程启动时的组装

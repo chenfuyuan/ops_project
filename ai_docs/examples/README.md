@@ -1,12 +1,12 @@
 # Examples
 
-This directory is reserved for canonical implementation examples for AI assistants.
+这个目录用于存放提供给 AI 助手参考的标准实现样例。
 
-## Current examples
-- `standard_service.md`: how a business node `service.py` should be structured
-- `standard_ports.md`: how business-side dependency boundaries should be expressed
-- `standard_infrastructure_adapter.md`: how a business adapter should implement a port and isolate provider details
-- `standard_workflow_node.md`: how a workflow-facing node adapter should map state to service input and back
+## 当前样例
+- `standard_service.md`：说明业务节点 `service.py` 应如何组织
+- `standard_ports.md`：说明业务侧依赖边界应如何表达
+- `standard_infrastructure_adapter.md`：说明业务 adapter 应如何实现 port 并隔离 provider 细节
+- `standard_workflow_node.md`：说明 workflow-facing node adapter 应如何把 state 映射为 service 输入再映射回去
 
-## Rule
-Only add examples that represent patterns the team wants AI to copy repeatedly. Prefer a small number of high-quality examples over many partial ones.
+## 规则
+这里只添加团队希望 AI 反复模仿的模式。宁可保留少量高质量样例，也不要堆积大量不完整样例。

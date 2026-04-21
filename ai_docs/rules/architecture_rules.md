@@ -1,61 +1,61 @@
-# Architecture Rules
+# 架构规则
 
-This file condenses the repository's architecture rules into an AI-oriented reference.
+本文件将仓库的架构规则整理为适合 AI 使用的参考说明。
 
-## Top-level boundaries
-Code under `app/` must fit one of these areas:
+## 顶层边界
+`app/` 下的代码必须归入以下区域之一：
 
-- `business/`: the only top-level area allowed to carry business semantics.
-- `capabilities/`: cross-business reusable capabilities with neutral language and no business semantics.
-- `interfaces/`: external protocol entrypoints such as HTTP.
-- `shared/`: stable, low-business-semantic kernel and infrastructure building blocks.
-- `bootstrap/`: runtime wiring, dependency assembly, and implementation selection.
+- `business/`：唯一允许承载业务语义的顶层区域。
+- `capabilities/`：跨业务复用、使用中性语言、且不带业务语义的通用能力。
+- `interfaces/`：HTTP 等外部协议入口。
+- `shared/`：稳定、低业务语义的内核与基础设施构件。
+- `bootstrap/`：运行时装配、依赖组装与实现选择。
 
-When choosing a location, prefer semantic ownership over technical type.
+决定代码位置时，应优先按语义归属判断，而不是按技术类型判断。
 
-## What each area may do
+## 各区域可以做什么
 ### `business/`
-- Own workflows, nodes, business entities, rules, use-case orchestration, and business-defined ports.
-- Use `ports + infrastructure` to reach capabilities, external systems, and storage.
-- Keep business language in `service.py`, `entities.py`, `rules.py`, and `ports.py`.
+- 承载 workflow、node、业务实体、业务规则、用例编排，以及业务自己定义的 ports。
+- 通过 `ports + infrastructure` 访问 capabilities、外部系统和存储。
+- 将业务语言保留在 `service.py`、`entities.py`、`rules.py` 和 `ports.py` 中。
 
-Do not:
-- Put vendor SDKs, ORM implementations, or HTTP clients directly in business core files.
-- Let `service.py` skip `ports` and call concrete adapters directly.
+不要：
+- 在业务核心文件中直接放入供应商 SDK、ORM 实现或 HTTP client。
+- 让 `service.py` 绕过 `ports` 直接调用具体 adapter。
 
 ### `capabilities/`
-- Host reusable, business-neutral capabilities.
-- Standardize provider differences and expose stable contracts.
+- 承载可复用、无业务语义的通用能力。
+- 统一 provider 差异并暴露稳定契约。
 
-Do not:
-- Depend on `business/`.
-- Hide business rules behind a "shared capability" label.
-- Leak provider-specific fields into business-facing contracts.
+不要：
+- 依赖 `business/`。
+- 以“共享能力”为名隐藏业务规则。
+- 将 provider 特有字段泄漏到面向业务的契约中。
 
 ### `interfaces/`
-- Parse protocol input, perform boundary concerns, and call business entrypoints.
+- 负责协议输入解析、边界处理，并调用业务入口。
 
-Do not:
-- Reach into `business/**/infrastructure/*`.
-- Implement business rules or external dependency adaptation here.
+不要：
+- 直接深入到 `business/**/infrastructure/*`。
+- 在这里实现业务规则或外部依赖适配。
 
 ### `shared/`
-- Host low-semantic, cross-context kernel types and infrastructure utilities.
+- 承载低语义、跨上下文复用的内核类型和基础设施工具。
 
-Do not:
-- Store business DTOs, business enums, business rules, or "misc" leftovers.
-- Turn `shared/` into a dumping ground.
+不要：
+- 存放业务 DTO、业务枚举、业务规则，或无处安放的“杂项”代码。
+- 把 `shared/` 变成杂物间。
 
 ### `bootstrap/`
-- Assemble dependencies and choose implementations.
-- Handle local vs remote vs mock vs provider selection.
+- 负责装配依赖和选择实现。
+- 处理 local / remote / mock / provider 等实现切换。
 
-Do not:
-- Hold business logic.
-- Be depended on by other layers.
+不要：
+- 承载业务逻辑。
+- 被其他层反向依赖。
 
-## Standard business structure
-A business domain should generally follow this shape:
+## 标准业务结构
+一个业务域通常应采用如下结构：
 
 ```text
 business/<domain>/
@@ -72,52 +72,52 @@ business/<domain>/
       └─ infrastructure/
 ```
 
-Not every file must always exist, but responsibilities must stay consistent.
+并不是每个文件都必须存在，但职责边界必须保持一致。
 
-## Workflow and node responsibilities
+## workflow 与 node 的职责
 ### `workflow/`
-Responsible for topology, registry, edges, and state flow.
+负责流程拓扑、registry、edges 和 state 流转。
 
-Do not:
-- Implement business rules.
-- Call external SDKs or storage implementations directly.
-- Grow `state.py` into an unbounded global context.
+不要：
+- 实现业务规则。
+- 直接调用外部 SDK 或存储实现。
+- 让 `state.py` 膨胀成无边界的全局上下文。
 
 ### `node.py`
-- Adapt workflow state into node input.
-- Call `service.py`.
-- Map results back into workflow state.
+- 将 workflow state 适配为 node 输入。
+- 调用 `service.py`。
+- 将结果映射回 workflow state。
 
 ### `service.py`
-- Orchestrate node-level business use cases.
-- Combine entities, rules, and port calls.
+- 编排节点级业务用例。
+- 组合 entities、rules 和 port 调用。
 
-Do not:
-- Call SDKs, HTTP clients, RPC clients, or ORM implementations directly.
-- Own timeout, retry, transport, or provider-switching concerns.
+不要：
+- 直接调用 SDK、HTTP client、RPC client 或 ORM 实现。
+- 承担 timeout、retry、transport 或 provider 切换等职责。
 
 ### `ports.py`
-- Define interfaces in business language.
-- Express what the business needs, not how technology works.
+- 用业务语言定义接口。
+- 表达业务需要什么，而不是技术怎么做。
 
 ### `infrastructure/`
-- Implement adapters, translation, protocol mapping, and persistence integration.
+- 实现 adapter、翻译、协议映射和持久化集成。
 
-Do not:
-- Hold business decisions.
+不要：
+- 承载业务决策。
 
-## Required call chain
-Preferred call chain:
+## 必须遵循的调用链
+推荐调用链：
 
 ```text
 interfaces -> business workflow/node -> service.py -> ports.py -> infrastructure/* -> capabilities/external systems/storage
 ```
 
-Business code must not bypass `ports`.
-Interfaces must not bypass business boundaries.
-Workflow code must not perform direct infrastructure calls.
+业务代码不能绕过 `ports`。
+`interfaces` 不能绕过业务边界。
+`workflow` 代码不能直接进行基础设施调用。
 
-## Allowed dependency direction
+## 允许的依赖方向
 ```text
 interfaces  -> business
 business    -> shared
@@ -127,25 +127,25 @@ capabilities -> shared
 bootstrap   -> all (composition only)
 ```
 
-## Forbidden dependency direction
+## 禁止的依赖方向
 - `capabilities -> business`
 - `shared -> business`
 - `interfaces -> business/**/infrastructure/*`
 - `service.py -> concrete adapter`
 - `workflow -> external SDK / remote client / storage implementation`
-- business core files directly depending on vendor SDKs, HTTP clients, or ORM implementations
+- 业务核心文件直接依赖供应商 SDK、HTTP client 或 ORM 实现
 
-## High-sensitivity areas
-Changes in these areas need stricter review:
+## 高敏感区域
+以下区域的改动需要更严格的审查：
 - `shared/`
 - `capabilities/`
 - `workflow/state.py`
 - `business/**/ports.py`
 - `business/**/infrastructure/*`
 
-## Quick placement guide
-- Carries business meaning: `business/`
-- Reusable neutral capability: `capabilities/`
-- Protocol entrypoint: `interfaces/`
-- Stable low-semantic shared building block: `shared/`
-- Wiring and implementation choice: `bootstrap/`
+## 快速放置判断
+- 带业务语义：`business/`
+- 可复用的中性能力：`capabilities/`
+- 协议入口：`interfaces/`
+- 稳定、低语义的共享构件：`shared/`
+- 装配与实现选择：`bootstrap/`

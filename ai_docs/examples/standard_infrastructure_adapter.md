@@ -1,29 +1,29 @@
-# Standard Infrastructure Adapter Pattern
+# 标准 Infrastructure Adapter 模式
 
-Use this pattern when generating `app/business/<domain>/nodes/<unit>/infrastructure/*.py`.
+在生成 `app/business/<domain>/nodes/<unit>/infrastructure/*.py` 时，使用这份模式。
 
-## Purpose
-Files under `infrastructure/` implement business-defined ports and translate between business language and external systems, capabilities, or persistence layers.
+## 目的
+`infrastructure/` 下的文件负责实现业务定义的 ports，并在业务语言与外部系统、capabilities 或持久化层之间做翻译。
 
-## Responsibilities
-- Implement interfaces declared in `ports.py`.
-- Translate business DTOs or entities into provider, capability, repository, or protocol calls.
-- Normalize external responses and errors into business-friendly results.
-- Keep transport, provider, serialization, auth, retry, and timeout details out of `service.py`.
+## 职责
+- 实现 `ports.py` 中声明的接口。
+- 将业务 DTO 或实体翻译成 provider、capability、repository 或协议调用。
+- 将外部响应和错误归一化为业务可接受的结果。
+- 把 transport、provider、serialization、auth、retry 和 timeout 细节隔离在 `service.py` 之外。
 
-## Must do
-- Depend on the port contract being implemented.
-- Keep translation logic close to the boundary.
-- Use provider-specific SDKs or storage drivers only here or in lower shared infrastructure layers.
-- Return values that match the business-side port contract.
+## 必须做到
+- 依赖自己所实现的 port 契约。
+- 让翻译逻辑尽量贴近边界。
+- 仅在这里或更底层的 shared infrastructure 中使用 provider 特定 SDK 或存储驱动。
+- 返回值必须符合业务侧 port 契约。
 
-## Must not do
-- Add business decision logic that belongs in `service.py` or `rules.py`.
-- Leak vendor-specific request or response models into business core files.
-- Choose implementations dynamically inside the adapter when that choice belongs in `bootstrap`.
-- Turn one adapter into a grab bag for unrelated integrations.
+## 必须避免
+- 加入本应属于 `service.py` 或 `rules.py` 的业务决策逻辑。
+- 将 vendor 特有请求或响应模型泄漏到业务核心文件中。
+- 在 adapter 内部动态做实现选择，而这个选择本应属于 `bootstrap`。
+- 把一个 adapter 做成承载多个无关集成的大杂烩。
 
-## Preferred shape
+## 推荐结构
 ```python
 from app.business.<domain>.nodes.<unit>.dto import <Query>, <SavedArtifact>
 from app.business.<domain>.nodes.<unit>.entities import <Entity>
@@ -44,7 +44,7 @@ class SqlArtifactRepository(ArtifactRepository):
         return <SavedArtifact>(artifact_id=record.id)
 ```
 
-## Another common shape
+## 另一种常见结构
 ```python
 from app.business.<domain>.nodes.<unit>.dto import <Query>
 from app.business.<domain>.nodes.<unit>.ports import ContextReader
@@ -61,18 +61,18 @@ class HttpCapabilityContextReader(ContextReader):
         return payload["content"]
 ```
 
-## Adapter quality test
-Before finalizing a generated adapter, check:
-- Does this file implement a business-defined port instead of inventing a parallel contract?
-- If the provider payload changes, can I update this adapter without touching `service.py`?
-- Is all vendor or protocol knowledge confined here?
-- Have I accidentally added business branching that should live in rules or services?
+## Adapter 质量自检
+在完成生成前，检查：
+- 这个文件是否实现了业务定义的 port，而不是私自发明了另一套契约？
+- 如果 provider payload 变了，我是否只需要改这个 adapter，而不用改 `service.py`？
+- 所有 vendor 或协议知识是否都被限制在这里？
+- 我是否不小心加入了本应放在 rules 或 services 中的业务分支？
 
-## Naming guidance
-Prefer names like:
+## 命名建议
+优先使用：
 - `SqlArtifactRepository`
 - `HttpCapabilityContextReader`
 - `S3ArtifactStorage`
 - `ExternalValidationClient`
 
-Name the adapter by responsibility first, then provider or transport.
+命名时先表达职责，再表达 provider 或 transport。
