@@ -9,7 +9,6 @@
 - 比单个 prompt 更宽一些，但又不足以成为长期规则的短期 migration、refactor 或 rollout 背景。
 
 ## 这里不应该放什么
-- 来自 `openspec/` 的 OpenSpec 文档。
 - 应该放在 `ai_docs/rules/` 中的稳定编码规则。
 - 应该放在 `ai_docs/examples/` 中的标准实现模式。
 - 原始会议记录、长对话文本或大段复制文档。
