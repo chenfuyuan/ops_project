@@ -27,7 +27,8 @@
 - 缓存与轻量异步协调：`Redis`；
 - 文件与产物存储：`S3-compatible Object Storage`；
 - 应用框架：`FastAPI`；
-- 数据访问：`SQLAlchemy 2.x + Alembic`。
+- 数据访问：`SQLAlchemy 2.x + Alembic`；
+- Python 依赖与环境管理：`uv + pyproject.toml + uv.lock`。
 
 本文档不讨论以下内容：
 
@@ -50,7 +51,8 @@
 
 | 层次 | 默认选型 | 说明 |
 | --- | --- | --- |
-| 编程语言 | Python 3.12 | 作为项目默认语言版本 |
+| 编程语言 | Python 3.13 | 作为项目默认语言版本 |
+| 依赖与环境管理 | uv + pyproject.toml + uv.lock | 统一管理依赖定义、锁文件、虚拟环境与命令执行 |
 | Web / API | FastAPI + Uvicorn | 承载 HTTP 接口与应用入口 |
 | 数据模型与校验 | Pydantic v2 | 用于请求、响应、配置和 DTO 校验 |
 | ORM / 数据访问 | SQLAlchemy 2.x | 承载数据库访问和仓储实现 |
@@ -66,6 +68,8 @@
 
 - 默认选择成熟、生态稳定、AI 易于推断和补全的技术栈；
 - 优先保证“单体可稳定落地”，而不是过早追求分布式复杂度；
+- Python 依赖、锁文件、虚拟环境与项目命令执行统一采用 `uv` 体系，使用 `pyproject.toml` 作为依赖定义的单一事实来源，并提交 `uv.lock` 保证环境可重现；
+- 依赖分组保持克制，初始化阶段默认按 `runtime / dev / test` 管理，不并行维护 `requirements.txt`、Poetry 或 Conda 作为项目级真相来源；
 - Redis 与对象存储作为默认预留组件存在，但并不要求所有业务场景一开始就全面使用；
 - 业务边界仍通过 `business / capabilities / interfaces / shared / bootstrap` 约束，而不是通过基础设施种类来决定模块归属。
 
