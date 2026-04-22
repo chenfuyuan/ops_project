@@ -82,6 +82,7 @@
 - 发布责任人：确保高风险变更有审查和回滚准备
 
 ## 与其他文档关系
+- 应用代码最小 CI 实践：`docs/application_minimal_ci_baseline.md`
 - 环境与部署：`docs/deployment_environment_baseline.md`
 - 配置与密钥：`docs/configuration_and_secrets_management.md`
 - 发布与回滚：`docs/release_change_and_rollback.md`

@@ -1,14 +1,9 @@
 from pathlib import Path
 import os
-import sys
 import unittest
 
 from fastapi.testclient import TestClient
 from celery import Celery
-
-ROOT = Path(__file__).resolve().parents[2]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
 
 from app.bootstrap.settings import load_settings
 from app.bootstrap.worker import create_worker_app
@@ -17,6 +12,8 @@ from app.shared.infra.cache import create_cache_endpoint
 from app.shared.infra.database import create_engine_from_settings
 from app.shared.infra.migrations import migration_paths
 from app.shared.infra.storage import create_object_storage_endpoint
+
+ROOT = Path(__file__).resolve().parents[2]
 
 
 class RuntimeValidationTest(unittest.TestCase):

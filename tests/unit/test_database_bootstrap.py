@@ -1,14 +1,8 @@
-from pathlib import Path
 import os
-import sys
 import unittest
 
 from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker
-
-ROOT = Path(__file__).resolve().parents[2]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
 
 from app.bootstrap.settings import load_settings
 from app.shared.infra.database import create_engine_from_settings, create_session_factory

@@ -1,10 +1,4 @@
-from pathlib import Path
-import sys
 import unittest
-
-ROOT = Path(__file__).resolve().parents[2]
-if str(ROOT) not in sys.path:
-    sys.path.insert(0, str(ROOT))
 
 from app.bootstrap.api import create_api_app
 from app.interfaces.http.app import app

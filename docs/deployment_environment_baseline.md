@@ -105,6 +105,7 @@
 - 运维或发布责任人：维护环境配置、访问控制和资源可用性
 
 ## 与其他文档关系
+- 应用代码最小 CI 实践：`docs/application_minimal_ci_baseline.md`
 - 运行拓扑与组件职责：`docs/technical_architecture_baseline.md`
 - 配置与密钥：`docs/configuration_and_secrets_management.md`
 - 可观测性：`docs/observability_and_alerting.md`
