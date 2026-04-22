@@ -54,7 +54,8 @@ class ApplicationMinimalCiDocumentTest(unittest.TestCase):
         self.assertIn("## 应用代码最小 CI 命令", contents)
         self.assertIn("uv run ruff check app tests", contents)
         self.assertIn("uv run python -m unittest discover -s tests/architecture", contents)
-        self.assertIn("uv run python -m unittest discover -s tests/unit && uv run python -m unittest discover -s tests/architecture", contents)
+        self.assertIn("uv run python -m unittest discover -s tests/unit", contents)
+        self.assertNotIn("uv run python -m unittest discover -s tests/unit && uv run python -m unittest discover -s tests/architecture", contents)
         self.assertIn("uv run python -m unittest discover -s tests/integration", contents)
 
 

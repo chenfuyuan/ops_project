@@ -72,7 +72,7 @@
 推荐的最小命令入口可按三层模型表达为：
 - 静态与结构校验：`uv run ruff check app tests`
 - 架构边界检查：`uv run python -m unittest discover -s tests/architecture`
-- 测试校验层默认测试集合：`uv run python -m unittest discover -s tests/unit && uv run python -m unittest discover -s tests/architecture`
+- 测试校验层默认测试集合：`uv run python -m unittest discover -s tests/unit`
 - 可运行性与构建确认层：`uv run python -m unittest discover -s tests/integration`
 
 是否纳入默认门禁，应优先以“最小必需、可稳定执行、与现有规则一致”为判断原则。
