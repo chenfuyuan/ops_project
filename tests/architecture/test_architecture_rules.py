@@ -32,7 +32,9 @@ class ArchitectureRulesTest(unittest.TestCase):
 
     def _assert_not_importing(self, path: Path, prefix: str, suffix: str) -> None:
         for name in self._imports(path):
-            self.assertFalse(name.startswith(prefix) and suffix in name, f"{path} imports {name}")
+            self.assertFalse(
+                name.startswith(prefix) and suffix in name, f"{path} imports {name}"
+            )
 
     def _assert_no_prefix(self, path: Path, prefix: str) -> None:
         for name in self._imports(path):

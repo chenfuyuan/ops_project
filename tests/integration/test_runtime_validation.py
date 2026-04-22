@@ -48,7 +48,9 @@ class RuntimeValidationTest(unittest.TestCase):
     def test_infrastructure_bootstraps_without_business_models(self) -> None:
         previous_database = os.environ.get("PERSON_UP_DATABASE_URL")
         previous_redis = os.environ.get("PERSON_UP_REDIS_URL")
-        previous_storage_endpoint = os.environ.get("PERSON_UP_OBJECT_STORAGE_ENDPOINT_URL")
+        previous_storage_endpoint = os.environ.get(
+            "PERSON_UP_OBJECT_STORAGE_ENDPOINT_URL"
+        )
         previous_storage_bucket = os.environ.get("PERSON_UP_OBJECT_STORAGE_BUCKET")
         os.environ["PERSON_UP_DATABASE_URL"] = "sqlite+pysqlite:///:memory:"
         os.environ["PERSON_UP_REDIS_URL"] = "redis://localhost:6379/0"
@@ -73,19 +75,26 @@ class RuntimeValidationTest(unittest.TestCase):
             if previous_storage_endpoint is None:
                 os.environ.pop("PERSON_UP_OBJECT_STORAGE_ENDPOINT_URL", None)
             else:
-                os.environ["PERSON_UP_OBJECT_STORAGE_ENDPOINT_URL"] = previous_storage_endpoint
+                os.environ["PERSON_UP_OBJECT_STORAGE_ENDPOINT_URL"] = (
+                    previous_storage_endpoint
+                )
             if previous_storage_bucket is None:
                 os.environ.pop("PERSON_UP_OBJECT_STORAGE_BUCKET", None)
             else:
                 os.environ["PERSON_UP_OBJECT_STORAGE_BUCKET"] = previous_storage_bucket
 
-        self.assertEqual("sqlite+pysqlite:///:memory:", engine.url.render_as_string(hide_password=False))
+        self.assertEqual(
+            "sqlite+pysqlite:///:memory:",
+            engine.url.render_as_string(hide_password=False),
+        )
         self.assertEqual("redis://localhost:6379/0", cache.url)
         self.assertEqual("person-up", storage.bucket)
         self.assertTrue(paths.root_dir.is_dir())
 
     def test_governance_checks_run_without_sample_business_logic(self) -> None:
-        architecture_test = ROOT / "tests" / "architecture" / "test_architecture_rules.py"
+        architecture_test = (
+            ROOT / "tests" / "architecture" / "test_architecture_rules.py"
+        )
         self.assertTrue(architecture_test.exists())
         self.assertFalse((ROOT / "app" / "business" / "example.py").exists())
 

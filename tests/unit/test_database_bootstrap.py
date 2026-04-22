@@ -5,7 +5,10 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.orm import sessionmaker
 
 from app.bootstrap.settings import load_settings
-from app.shared.infra.database import create_engine_from_settings, create_session_factory
+from app.shared.infra.database import (
+    create_engine_from_settings,
+    create_session_factory,
+)
 
 
 class DatabaseBootstrapTest(unittest.TestCase):

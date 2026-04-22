@@ -2,10 +2,26 @@ name: ci
 
 on:
   push:
+    paths:
+      - 'app/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - '.github/workflows/ci.yml'
   pull_request:
+    paths:
+      - 'app/**'
+      - 'tests/**'
+      - 'pyproject.toml'
+      - 'uv.lock'
+      - '.github/workflows/ci.yml'
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
-  static-and-structure:
+  quality-preflight:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -13,26 +29,72 @@ jobs:
         with:
           python-version: '3.13'
       - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+      - name: Validate pull request title
+        if: github.event_name == 'pull_request'
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          case "$PR_TITLE" in
+            feat:*|fix:*|refactor:*|docs:*|test:*|chore:*)
+              ;;
+            *)
+              echo "PR title must start with one of: feat:, fix:, refactor:, docs:, test:, chore:" >&2
+              echo "Received: $PR_TITLE" >&2
+              exit 1
+              ;;
+          esac
+      - name: Sync dependencies
+        run: uv sync --group dev --group test
+      - name: Ruff format check
+        run: uv run ruff format --check app tests
+
+  static-and-architecture:
+    runs-on: ubuntu-latest
+    needs: quality-preflight
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
       - name: Sync dependencies
         run: uv sync --group dev --group test
       - name: Ruff check
         run: uv run ruff check app tests
-      - name: Architecture checks
-        run: uv run python -m unittest discover -s tests/architecture
+      - name: Architecture guard
+        run: uv run python -m unittest discover -s tests/architecture 2>&1 | tee architecture-test-report.txt
+      - name: Upload architecture diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: architecture-diagnostics
+          path: architecture-test-report.txt
 
   test-suite:
     runs-on: ubuntu-latest
-    needs: static-and-structure
+    needs: static-and-architecture
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
         with:
           python-version: '3.13'
       - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
       - name: Sync dependencies
         run: uv sync --group dev --group test
       - name: Unit tests
-        run: uv run python -m unittest discover -s tests/unit
+        run: uv run python -m unittest discover -s tests/unit 2>&1 | tee unit-test-report.txt
+      - name: Upload unit test diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-diagnostics
+          path: unit-test-report.txt
 
   runtime-validation:
     runs-on: ubuntu-latest
@@ -43,7 +105,15 @@ jobs:
         with:
           python-version: '3.13'
       - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
       - name: Sync dependencies
         run: uv sync --group dev --group test
       - name: Runtime validation
-        run: uv run python -m unittest discover -s tests/integration
+        run: uv run python -m unittest discover -s tests/integration 2>&1 | tee integration-test-report.txt
+      - name: Upload runtime diagnostics
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-validation-diagnostics
+          path: integration-test-report.txt
