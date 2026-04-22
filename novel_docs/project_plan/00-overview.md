@@ -1,0 +1,40 @@
+# 项目规划路线图总览
+
+`novel_docs/project_plan/` 现在只承担一件事：作为 AI 长篇小说项目的唯一前期规划入口，帮助我们先确认路线图、阶段边界和单需求卡片，再决定是否进入未来的 OpenSpec change。
+
+## 项目目标
+
+- 先建立一个可自用的 AI 长篇小说生成工作流，从人工主导逐步演进到自动化与 SaaS。
+- 用阶段化路线拆开复杂度，避免在规划阶段一次性展开完整解决方案。
+- 将后续实施的最小输入稳定为“单张 requirement card”，而不是“大而全的设计总纲”。
+
+## 路线图总览
+
+| Phase | 关注点 | 前置关系 | 入口 |
+| --- | --- | --- | --- |
+| Phase 1 - MVP | 跑通人工主导的最小创作闭环 | 无 | [phases/mvp/00-overview.md](phases/mvp/00-overview.md) |
+| Phase 2 - Consistency | 建立一致性审计、修订与状态治理 | Phase 1 | [phases/consistency/00-overview.md](phases/consistency/00-overview.md) |
+| Phase 3 - Narrative | 提升叙事张力、类型化能力与上下文管理 | Phase 2 | [phases/narrative/00-overview.md](phases/narrative/00-overview.md) |
+| Phase 4 - Style | 建立风格控制与去 AI 化能力 | Phase 2 | [phases/style/00-overview.md](phases/style/00-overview.md) |
+| Phase 5 - Automation | 将稳定能力接入自动驾驶与通知体系 | Phase 2, 3, 4 | [phases/automation/00-overview.md](phases/automation/00-overview.md) |
+| Phase 6 - SaaS | 演进到多用户、配额和模板市场能力 | Phase 5 | [phases/saas/00-overview.md](phases/saas/00-overview.md) |
+
+## 阅读路径
+
+1. 先在本页确认当前要讨论的是哪个 phase。
+2. 进入目标 phase 的 [`00-overview.md`](phases/mvp/00-overview.md)，理解阶段目标、边界和进入/退出标准。
+3. 阅读该 phase 的 `requirements.md`，选择一个最值得推进的单需求卡片。
+4. 进入对应 `requirements/<slug>.md`，确认 Goal、User Value、Success Criteria、Scope、Non-goals 和 Dependencies。
+5. 只有在卡片边界清晰后，才为这张卡片启动未来的单个 OpenSpec change。
+
+## 当前不做什么
+
+- 不在 `project_plan` 阶段提前写架构方案、数据模型、模块拆分或接口细节。
+- 不把 phase 文档扩写成设计容器、任务清单或实现步骤说明。
+- 不在这里预生成 proposal、design、tasks 等 change 产物。
+- 不把历史规划文档继续放在主路径中与新入口并列维护。
+
+## 历史参考
+
+- 旧规划资产已归档到 [`novel_docs/archive/project_plan-pre-phase-first/`](../archive/project_plan-pre-phase-first/README.md)。
+- 归档内容只用于理解历史背景，不再承担当前规划入口职责。

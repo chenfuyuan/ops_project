@@ -1,0 +1,37 @@
+# 大纲生成
+
+## Goal
+
+把小说种子逐步整理成可编辑、可继续推进的大纲结果，为后续章节规划提供稳定输入。
+
+## User Value
+
+作者可以从模糊想法出发，逐步得到结构化大纲，而不必在一开始就手工写完整方案。
+
+## Success Criteria
+
+- 大纲生成需求覆盖从初始想法到可继续使用的大纲结果。
+- 用户可以在流程中审阅和调整内容，而不是只能接受一次性输出。
+- 该卡片本身足以作为未来单个 change 的上游输入。
+
+## Scope
+
+- 大纲生成的阶段化用户流程
+- 大纲结果需要具备的可编辑性和可继续性
+- 大纲与后续蓝图规划之间的衔接关系
+
+## Non-goals
+
+- 具体提示词编排
+- 内部状态机设计
+- 章节级详细拆分规则
+
+## Dependencies / Prerequisites
+
+- [project-scaffold](project-scaffold.md)
+- [llm-routing](llm-routing.md)
+
+## Notes
+
+- 未来 change 可以围绕“大纲生成流程”单独展开。
+- 历史参考：[`phase1-mvp/03-outline-generation.md`](../../../../archive/project_plan-pre-phase-first/phase1-mvp/03-outline-generation.md)
