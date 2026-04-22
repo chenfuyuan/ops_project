@@ -1,4 +1,4 @@
-## cicd-baseline
+## MODIFIED Requirements
 
 ### Requirement: 项目必须定义平台中立的 CI/CD 阶段模型
 系统 MUST 提供一个平台中立的 CI/CD 基线定义，用于表达代码变更从校验、构建、可发布制品确认到受控部署的阶段边界与职责分工。该定义 MUST 描述哪些环节属于 CI，哪些环节属于受控部署范围内的 CD，并且 MUST 通过一篇 CI/CD 主文档统一承载阶段模型、默认门禁、可发布制品、部署边界与文档职责映射。该定义 MUST NOT 绑定 GitHub Actions、GitLab CI、Jenkins 或其他具体平台实现。

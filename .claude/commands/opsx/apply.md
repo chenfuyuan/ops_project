@@ -64,14 +64,16 @@ Implement tasks from an OpenSpec change.
 
    For each pending task:
    - Show which task is being worked on
-   - Use the `test-driven-development` skill as the default path:
-     1. Write or identify the next smallest failing test for the task
-     2. Run it to confirm it fails for the expected reason
-     3. Make the smallest code change required to pass it
-     4. Run relevant regression checks
+   - Choose execution mode by task type:
+     - **Code tasks**: use the `test-driven-development` skill as the default path:
+       1. Write or identify the next smallest failing test for the task
+       2. Run it to confirm it fails for the expected reason
+       3. Make the smallest code change required to pass it
+       4. Run relevant regression checks
+     - **Documentation tasks**: update the relevant docs directly without forcing TDD
    - Keep changes minimal and focused
    - If unexpected failures or unexplained behavior appear, switch to the `systematic-debugging` skill to find the root cause before proposing or making additional fixes
-   - After root cause is understood, return to the `test-driven-development` path and complete the fix
+   - After root cause is understood, return to the appropriate path and complete the task
    - Mark task complete in the tasks file: `- [ ]` → `- [x]`
    - Continue to next task
 
@@ -148,11 +150,11 @@ What would you like to do?
 **Guardrails**
 - Keep going through tasks until done or blocked
 - Always read context files before starting (from the apply instructions output)
-- Use the `test-driven-development` skill as the default implementation path for each task
+- Use the `test-driven-development` skill for code implementation tasks; do not force TDD for documentation-only tasks
 - If unexpected failures or unexplained behavior appear, use the `systematic-debugging` skill before proposing additional fixes
 - If task is ambiguous, pause and ask before implementing
 - If implementation reveals issues, pause and suggest artifact updates
-- Keep code changes minimal and scoped to each task
+- Keep code and document changes minimal and scoped to each task
 - Update task checkbox immediately after completing each task
 - Pause on unclear requirements - don't guess
 - Use contextFiles from CLI output, don't assume specific file names
