@@ -19,6 +19,10 @@
 - API process
 - Worker process
 
+本地开发可采用 Docker Compose 作为推荐编排方式，以保持 API、Worker 与基础依赖的拓扑一致。
+正式环境默认以容器化部署作为交付方向。
+当前仓库若未提供 `Dockerfile`、Compose 文件或部署清单，生成代码、命令或文档时不得假定这些工程产物已经存在。
+
 API process 负责同步请求响应链路和任务投递。
 Worker process 负责耗时、可重试、批处理或后台任务。
 
@@ -34,6 +38,7 @@ Worker process 负责耗时、可重试、批处理或后台任务。
 - 不要在 `uv` 之外再引入额外的依赖管理体系。
 - 不要把实现选择逻辑放进业务代码，应保留在 `bootstrap`。
 - 不要在 `service.py` 中直接写外部 SDK 调用。
+- 当仓库中尚未存在 `Dockerfile`、Compose 文件或部署清单时，不要输出“基于现有 Docker 资产”的建议，也不要虚构镜像名、服务名或容器启动命令。
 
 ## Worker 选择规则
 以下场景默认应进入后台 worker：
