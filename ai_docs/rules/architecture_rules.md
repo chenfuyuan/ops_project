@@ -26,11 +26,13 @@
 ### `capabilities/`
 - 承载可复用、无业务语义的通用能力。
 - 统一 provider 差异并暴露稳定契约。
+- 默认采用“根包稳定导出 + facade 对外入口 + contracts 对外契约 + 内部 service + providers 实现”的结构。
 
 不要：
 - 依赖 `business/`。
 - 以“共享能力”为名隐藏业务规则。
 - 将 provider 特有字段泄漏到面向业务的契约中。
+- 让外部调用方直接依赖 capability 内部实现文件路径。
 
 ### `interfaces/`
 - 负责协议输入解析、边界处理，并调用业务入口。
@@ -53,6 +55,51 @@
 不要：
 - 承载业务逻辑。
 - 被其他层反向依赖。
+
+## `capabilities/` 标准结构
+所有 capability 默认采用以下结构：
+
+```text
+capabilities/<capability>/
+├─ __init__.py
+├─ facade.py
+├─ service.py
+├─ errors.py
+├─ contracts/
+│  ├─ __init__.py
+│  ├─ request.py
+│  ├─ response.py
+│  └─ models.py
+└─ providers/
+   ├─ __init__.py
+   ├─ base.py
+   └─ <provider>_provider.py
+```
+
+职责约定：
+- `__init__.py`：统一对外导出稳定入口；外部优先从根包 import
+- `facade.py`：capability 对外访问入口，负责暴露稳定方法与屏蔽内部实现细节
+- `service.py`：capability 内部编排层，不作为外部稳定依赖面
+- `errors.py`：对外稳定错误类型
+- `contracts/request.py`：公开输入类型
+- `contracts/response.py`：公开输出类型
+- `contracts/models.py`：request / response 共用的公开模型、枚举和值对象
+- `providers/base.py`：provider 抽象约束
+- `providers/*_provider.py`：各 provider 的具体实现
+
+外部依赖约束：
+- 推荐外部调用方只依赖 capability 根包导出，例如 `from app.capabilities.<capability> import XxxFacade, XxxRequest, XxxResponse`
+- 不要让外部调用方直接依赖 `service.py`、`contracts/request.py`、`providers/*` 等内部文件路径
+- capability 内部允许继续拆分文件，但应优先通过 `__init__.py` 保持外部导入面稳定
+
+命名约束：
+- 对外入口优先使用 `facade.py`，避免使用语义模糊且易与 `interfaces/` 混淆的 `api/`
+- 对外公开类型优先使用 `contracts/`，避免将 facade、request、response、provider 混放在同一概念目录中
+- `models.py` 仅用于公开契约中的公共组成件；如果不存在共享公开模型，可以保留为空壳或在确有必要时再补充内容
+
+裁剪约束：
+- 允许在单个 capability 极小且尚未用到某类对象时，暂时保留空文件或占位文件，以维持统一结构
+- 如果团队后续明确决定允许小型 capability 缩减目录，再单独更新本规则；在此之前，不建议按 capability 大小使用不同目录模板
 
 ## 标准业务结构
 一个业务域通常应采用如下结构：

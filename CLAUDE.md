@@ -10,8 +10,9 @@
 3. `ai_docs/rules/naming_rules.md`
 4. `ai_docs/rules/tech_stack_baseline.md`
 5. `ai_docs/rules/testing_rules.md`
-6. `ai_docs/rules/review_checklist.md`
-7. 在生成或重构业务层代码时，按需阅读 `ai_docs/examples/` 下的相关文件
+6. `ai_docs/rules/coding_style_rules.md`
+7. `ai_docs/rules/review_checklist.md`
+8. 在生成或重构业务层代码时，按需阅读 `ai_docs/examples/` 下的相关文件
 
 ## 如何使用 `ai_docs/`
 - 将 `ai_docs/rules/` 视为默认长期生效的编码规则。

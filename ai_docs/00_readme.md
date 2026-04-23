@@ -16,8 +16,9 @@
 2. `rules/naming_rules.md`
 3. `rules/tech_stack_baseline.md`
 4. `rules/testing_rules.md`
-5. `rules/review_checklist.md`
-6. 有样例时再阅读 `examples/README.md`
+5. `rules/coding_style_rules.md`
+6. `rules/review_checklist.md`
+7. 有样例时再阅读 `examples/README.md`
 
 ## 维护规则
 当 `docs/` 中的源规则发生变化时，应同步更新这里对应的精简文件，确保 AI 使用的指引与仓库保持一致。
