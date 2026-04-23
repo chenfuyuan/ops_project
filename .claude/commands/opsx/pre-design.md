@@ -172,6 +172,7 @@ digraph brainstorming_pre_design {
 一般情况下，开始头脑风暴时 OpenSpec change 还不存在。此时在主题已足够清晰后，应主动创建一个新的 change 目录：
 
 - 路径：`openspec/changes/<type>-<topic>/`
+- 必须通过 OpenSpec CLI 创建或补齐目录元数据，确保 change 根目录存在 `.openspec.yaml`
 - 只创建当前需要的 change 目录
 - 将 `pre_design` 文档放入该目录
 - 不要同时创建 `proposal.md`、`design.md`、`tasks.md` 或其他 artifact
@@ -213,12 +214,14 @@ digraph brainstorming_pre_design {
 
 处理规则：
 
-- 如果唯一明确匹配：直接复用
+- 如果唯一明确匹配：直接复用，但写入前必须检查 change 根目录是否存在 `.openspec.yaml`；若缺失，先补齐再继续
 - 如果有多个候选但不唯一：停下来询问用户
 - 如果只是主题相关但范围不同：创建新的 change，不要强行复用
 - 不写入 `archive/`
 
 ### 6. 写入 pre_design 文档
+
+在写入任何 `pre_design` 文件之前，必须确认目标 change 根目录存在 `.openspec.yaml`。若不存在，不要把该目录视为完整的 OpenSpec change；应先通过 OpenSpec CLI 创建或补齐 change 元数据，再继续写文档。
 
 #### 默认产物
 
@@ -360,6 +363,7 @@ digraph brainstorming_pre_design {
 
 - 已完成高质量的需求梳理与规划设计
 - 已确定并创建或复用了目标 OpenSpec change
+- 目标 change 根目录存在 `.openspec.yaml`
 - 已写入 `pre_design.md`（必要时包含同级分卷）
 - 已向用户说明写入了哪些文件、位于哪里
 - 在此结束，不自动继续后续流程
