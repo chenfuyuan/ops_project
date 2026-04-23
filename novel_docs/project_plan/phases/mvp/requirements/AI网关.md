@@ -33,4 +33,4 @@
 ## Notes
 
 - 未来 change 需要决定 AI 网关的接入方式与配置治理实现。
-- 历史参考：[`phase1-mvp/02-llm-adapter.md`](../../../../archive/project_plan-pre-phase-first/phase1-mvp/02-llm-adapter.md)
+- 历史参考：[`phase1-mvp/02-ai-gateway.md`](../../../../archive/project_plan-pre-phase-first/phase1-mvp/02-ai-gateway.md)
