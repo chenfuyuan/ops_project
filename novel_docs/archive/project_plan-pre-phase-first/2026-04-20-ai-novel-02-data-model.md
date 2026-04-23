@@ -269,7 +269,7 @@ parent: 2026-04-20-ai-novel-00-overview.md
 | applicable_genres | JSON | 适用类型列表 |
 | created_at | TIMESTAMP | 创建时间 |
 
-### llm_profiles 表：LLM 模型配置
+### ai_gateway_profiles 表：AI 模型配置
 
 | 字段 | 类型 | 说明 |
 |------|------|------|

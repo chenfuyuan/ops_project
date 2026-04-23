@@ -17,7 +17,7 @@ date: 2026-04-20
 /novels/:id/write/:chapter  → 写作工作台
 /novels/:id/characters      → 角色管理
 /novels/:id/foreshadowing   → 伏笔台账
-/settings/llm               → LLM 模型配置
+/settings/ai-gateway        → AI 网关模型配置
 ```
 
 ## 页面详细设计

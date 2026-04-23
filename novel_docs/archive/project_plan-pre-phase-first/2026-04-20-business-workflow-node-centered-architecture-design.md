@@ -17,7 +17,7 @@ status: draft
 
 ## 1. 背景
 
-当前项目最初采用的是“模块化单体 + 模块内分层”的思路：`novel / outline / blueprint / chapter / memory / llm` 等模块各自拆分 `api / application / domain / infrastructure`。
+当前项目最初采用的是“模块化单体 + 模块内分层”的思路：`novel / outline / blueprint / chapter / memory / ai_gateway` 等模块各自拆分 `api / application / domain / infrastructure`。
 
 随着主流程设计逐渐清晰，系统的核心不再只是“有哪些模块”，而是：
 
@@ -384,7 +384,7 @@ business/novel/workflow/graph.py
 
 ## 8. 与旧的 modules 思路如何衔接
 
-旧结构中，`outline / blueprint / chapter / memory / llm` 都被视为同层模块。
+旧结构中，`outline / blueprint / chapter / memory / ai_gateway` 都被视为同层模块。
 
 新结构下，建议这样重组：
 
@@ -408,7 +408,7 @@ business/novel/workflow/graph.py
 
 原本的：
 
-- `llm`
+- `ai_gateway`
 - `memory`
 
 如果它们会被多个节点乃至多个业务线复用，则应抽成：
@@ -418,7 +418,7 @@ business/novel/workflow/graph.py
 
 其中：
 
-- `llm` 更适合重命名为 `ai_gateway`
+- `ai_gateway` 更适合放在 `capabilities/ai_gateway/`
 - `memory` 若未来承担检索、召回、知识组织、知识图谱等职责，更适合收敛到 `knowledge`
 
 ### 8.3 shared 仍保持克制

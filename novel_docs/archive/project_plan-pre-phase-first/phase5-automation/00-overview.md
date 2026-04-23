@@ -35,7 +35,7 @@ prerequisite: Phase 2, 3, 4
 | 文档 | 内容 |
 |------|------|
 | [01-autopilot.md](01-autopilot.md) | 自动驾驶状态机守护进程、状态流转、数据库驱动、幂等恢复、自动审批、批量生成 |
-| [02-circuit-breaker.md](02-circuit-breaker.md) | 熔断器系统：单小说熔断、全局熔断、状态机、LLM 适配层集成、恢复逻辑 |
+| [02-circuit-breaker.md](02-circuit-breaker.md) | 熔断器系统：单小说熔断、全局熔断、状态机、AI 网关集成、恢复逻辑 |
 | [03-realtime-notifications.md](03-realtime-notifications.md) | SSE 事件总线、实时推送、Webhook 通知、HMAC 签名、统计追踪 |
 | [04-api-frontend.md](04-api-frontend.md) | 自动驾驶控制 API、批量生成 API、统计 API、前端控制台与面板 |
 

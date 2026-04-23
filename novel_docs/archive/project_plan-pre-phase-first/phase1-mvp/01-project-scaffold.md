@@ -31,7 +31,7 @@ novel-ai/
 │   │   │   ├── blueprint/          # 蓝图生成 + 伏笔台账
 │   │   │   ├── chapter/            # 章节 CRUD + 生成流水线 + 章后管线
 │   │   │   ├── memory/             # 记忆引擎 + 洋葱模型 + 向量检索
-│   │   │   └── llm/                # LLM 适配 + 路由 + 配置
+│   │   │   └── ai_gateway/         # AI 网关 + 路由 + 配置
 │   │   │
 │   │   ├── interfaces/             # 输入输出适配层
 │   │   │   └── http/
@@ -41,7 +41,7 @@ novel-ai/
 │   │   │       │   ├── blueprint.py
 │   │   │       │   ├── chapter.py
 │   │   │       │   ├── character.py
-│   │   │       │   ├── llm.py
+│   │   │       │   ├── ai_gateway.py
 │   │   │       │   └── health.py
 │   │   │       ├── schemas/        # 请求响应模型
 │   │   │       │   └── common.py
@@ -146,7 +146,7 @@ app/modules/chapter/
 | blueprint | 蓝图批次生成、伏笔台账 | chapter_blueprints, foreshadowing |
 | chapter | 章节 CRUD + 生成流水线 + 章后管线 | chapters, chapter_summaries, pipeline_artifacts |
 | memory | 记忆引擎、洋葱模型上下文、向量检索 | 通过多模块 facade 读取，ChromaDB |
-| llm | LLM 适配器、任务路由、配置管理 | llm_profiles |
+| ai_gateway | AI 网关、任务路由、配置管理 | ai_gateway_profiles |
 
 ## 后端技术选型
 
@@ -177,7 +177,7 @@ app/modules/chapter/
 Phase 1 需要创建的表：
 
 - 核心表：novels, novel_architecture, characters, character_states, chapter_blueprints, chapters, chapter_summaries, foreshadowing
-- 配置表：llm_profiles
+- 配置表：ai_gateway_profiles
 - 流水线表：pipeline_artifacts
 
 每个模块在自己的 `infrastructure/orm_models.py` 中定义 SQLAlchemy 模型。使用 Alembic 管理迁移，每个 Phase 新增的表通过新的迁移版本引入。表结构详见总设计文档 `2026-04-20-ai-novel-02-data-model.md`。
@@ -192,10 +192,10 @@ Phase 1 需要创建的表：
 | CHROMA_PERSIST_DIR | ChromaDB 持久化目录 |
 | DATA_DIR | 小说文件存储目录 |
 | HOST / PORT | 服务器监听地址 |
-| DEFAULT_LLM_PROVIDER | 默认 LLM 提供商（可通过 DB 中的 llm_profiles 覆盖） |
-| DEFAULT_LLM_BASE_URL | 默认 LLM API 端点 |
-| DEFAULT_LLM_API_KEY | 默认 LLM API Key |
-| DEFAULT_LLM_MODEL | 默认模型 ID |
+| DEFAULT_AI_PROVIDER | 默认 AI 提供商（可通过 DB 中的 ai_gateway_profiles 覆盖） |
+| DEFAULT_AI_BASE_URL | 默认 AI API 端点 |
+| DEFAULT_AI_API_KEY | 默认 AI API Key |
+| DEFAULT_AI_MODEL | 默认模型 ID |
 
 ## 系统装配（bootstrap/）
 
@@ -211,7 +211,7 @@ Phase 1 需要创建的表：
 1. 加载 `shared/infra/settings.py` 配置
 2. 初始化 PostgreSQL 连接（SQLAlchemy async engine）
 3. 初始化 ChromaDB 客户端
-4. 按依赖顺序注册模块（llm → novel → character → blueprint → memory → outline → chapter）
+4. 按依赖顺序注册模块（ai_gateway → novel → character → blueprint → memory → outline → chapter）
 5. 每个模块的 `module.py` 注册 facade 到容器
 6. 注册 `interfaces/http/routes/` 到 FastAPI，路由通过容器获取 facade
 

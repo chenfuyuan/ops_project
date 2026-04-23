@@ -91,7 +91,7 @@ Planner 的提示词包含大纲概要（核心种子 + 当前幕结构）、本
 
 **LLM 提示词组装：**
 
-Writer 将 ContextPayload、ChapterIntent 和 Rule Stack 组装为 system prompt + user prompt，通过 LLMRouter 流式生成。生成过程中逐块通过 SSE 推送到前端。
+Writer 将 ContextPayload、ChapterIntent 和 Rule Stack 组装为 system prompt + user prompt，通过 AIGatewayRouter 流式生成。生成过程中逐块通过 SSE 推送到前端。
 
 **System Prompt 结构：** 包含写作规则列表和通用写作要求（场景驱动叙事、对话有潜台词、动作场景注重感官细节、保持前文一致性、章节结尾留悬念）。
 

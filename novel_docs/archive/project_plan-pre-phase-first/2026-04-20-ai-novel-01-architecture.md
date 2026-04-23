@@ -36,9 +36,9 @@ parent: 2026-04-20-ai-novel-00-overview.md
 │  │ novel  │ │character│ │outline │ │blueprint│         │
 │  │ 小说管理│ │ 角色状态 │ │ 大纲生成│ │蓝图+伏笔 │         │
 │  └────────┘ └─────────┘ └────────┘ └─────────┘         │
-│  ┌─────────────┐ ┌────────┐ ┌───────┐                   │
-│  │   chapter   │ │ memory │ │  llm  │                   │
-│  │流水线+章后管线│ │记忆引擎 │ │LLM路由│                   │
+│  ┌─────────────┐ ┌────────┐ ┌────────────┐                  │
+│  │   chapter   │ │ memory │ │ ai_gateway │                  │
+│  │流水线+章后管线│ │记忆引擎 │ │ AI网关路由 │                  │
 │  └─────────────┘ └────────┘ └───────┘                   │
 │                                                          │
 │  每个模块内部：api/ | application/ | domain/ | infra/     │
@@ -130,15 +130,15 @@ FastAPI 应用，职责：
 
 分布在各业务模块中，详见 [03-core-services.md](2026-04-20-ai-novel-03-core-services.md)（含模块归属表）。
 
-### LLM Adapter Layer
+### AI 网关层
 
-位于 `modules/llm/`，通过 facade 对外提供统一接口。
+位于 `modules/ai_gateway/`，通过 facade 对外提供统一接口。
 
-LLMAdapter 提供两个核心方法——同步调用（invoke）返回完整响应，流式调用（stream）返回异步迭代器。上层代码不关心具体 LLM 提供商。
+AIGatewayAdapter 提供两个核心方法——同步调用（invoke）返回完整响应，流式调用（stream）返回异步迭代器。上层代码不关心具体模型提供商。
 
 多模型路由：
 - 每个任务类型（plan / draft / audit / reflect / summarize 等）可配置不同的模型
-- 通过 `llm_profiles` 表存储配置，运行时按任务类型查找
+- 通过 `ai_gateway_profiles` 表存储配置，运行时按任务类型查找
 - 初期支持 OpenAI 兼容协议（覆盖 GPT、Claude 兼容端点、DeepSeek、Qwen、Ollama 等）
 - 后续按需加入 Anthropic 原生 SDK、其他厂商 SDK
 

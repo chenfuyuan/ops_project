@@ -45,7 +45,7 @@ goal: 从大纲到完整章节的最小闭环，能实际用起来写小说
 | 文档 | 内容 |
 |------|------|
 | [01-project-scaffold.md](01-project-scaffold.md) | 项目脚手架与基础设施 |
-| [02-llm-adapter.md](02-llm-adapter.md) | LLM 适配层与多模型路由 |
+| [02-llm-adapter.md](02-llm-adapter.md) | AI 网关与多模型路由 |
 | [03-outline-generation.md](03-outline-generation.md) | 大纲生成（雪花写作法） |
 | [04-blueprint-generation.md](04-blueprint-generation.md) | 章节蓝图生成 |
 | [05-chapter-pipeline.md](05-chapter-pipeline.md) | 章节生成流水线（简化版） |
