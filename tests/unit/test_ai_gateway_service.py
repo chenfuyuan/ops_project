@@ -9,7 +9,10 @@ from app.capabilities.ai_gateway import (
     OutputMode,
     TokenUsage,
 )
-from app.capabilities.ai_gateway.config import AiGatewayProfileConfig, AiGatewayProviderConfig
+from app.capabilities.ai_gateway.config import (
+    AiGatewayProfileConfig,
+    AiGatewayProviderConfig,
+)
 from app.capabilities.ai_gateway.service import AiGatewayService
 
 
@@ -83,7 +86,9 @@ class AiGatewayServiceTest(unittest.TestCase):
 
     def test_service_rejects_unknown_provider_kind(self) -> None:
         repository = FakeRepository()
-        repository.provider = repository.provider.model_copy(update={"kind": "missing-provider"})
+        repository.provider = repository.provider.model_copy(
+            update={"kind": "missing-provider"}
+        )
         service = AiGatewayService(config_repository=repository, providers={})
 
         with self.assertRaises(AiGatewayConfigError):

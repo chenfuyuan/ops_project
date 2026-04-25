@@ -8,7 +8,9 @@ from app.capabilities.ai_gateway.errors import ProviderCallError, ProviderTimeou
 class UrllibJsonTransport:
     """使用标准库执行 JSON POST 请求，避免运行时依赖测试 HTTP 客户端。"""
 
-    def post_json(self, *, url: str, headers: dict, payload: dict, timeout: float) -> dict:
+    def post_json(
+        self, *, url: str, headers: dict, payload: dict, timeout: float
+    ) -> dict:
         request = Request(
             url,
             data=json.dumps(payload).encode("utf-8"),

@@ -19,7 +19,9 @@ from app.capabilities.ai_gateway.errors import (
 class JsonHttpTransport(Protocol):
     """OpenAI-compatible provider 使用的最小 JSON HTTP transport。"""
 
-    def post_json(self, *, url: str, headers: dict, payload: dict, timeout: float) -> dict:
+    def post_json(
+        self, *, url: str, headers: dict, payload: dict, timeout: float
+    ) -> dict:
         """发送 JSON POST 请求并返回 JSON 字典。"""
 
 
@@ -43,7 +45,10 @@ class OpenAICompatibleProvider:
             try:
                 raw_response = self._transport.post_json(
                     url=self._chat_completions_url(provider_config.base_url),
-                    headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                    headers={
+                        "Authorization": f"Bearer {api_key}",
+                        "Content-Type": "application/json",
+                    },
                     payload=self._payload(request, profile),
                     timeout=profile.timeout_seconds,
                 )
@@ -51,20 +56,28 @@ class OpenAICompatibleProvider:
             except TimeoutError:
                 last_error = ProviderTimeoutError(
                     "AI provider call timed out",
-                    safe_context={"provider": provider_config.name, "attempt": attempt + 1},
+                    safe_context={
+                        "provider": provider_config.name,
+                        "attempt": attempt + 1,
+                    },
                 )
             except ProviderCallError:
                 raise
             except Exception:
                 last_error = ProviderCallError(
                     "AI provider call failed",
-                    safe_context={"provider": provider_config.name, "attempt": attempt + 1},
+                    safe_context={
+                        "provider": provider_config.name,
+                        "attempt": attempt + 1,
+                    },
                 )
         if last_error is not None:
             raise last_error
         raise ProviderCallError("AI provider call failed")
 
-    def _payload(self, request: AiGatewayRequest, profile: AiGatewayProfileConfig) -> dict[str, Any]:
+    def _payload(
+        self, request: AiGatewayRequest, profile: AiGatewayProfileConfig
+    ) -> dict[str, Any]:
         payload: dict[str, Any] = {
             "model": profile.model,
             "messages": [
@@ -85,7 +98,9 @@ class OpenAICompatibleProvider:
             }
         return payload
 
-    def _response(self, raw_response: dict[str, Any], output_mode: OutputMode) -> AiGatewayResponse:
+    def _response(
+        self, raw_response: dict[str, Any], output_mode: OutputMode
+    ) -> AiGatewayResponse:
         try:
             content = raw_response["choices"][0]["message"]["content"]
             usage = raw_response.get("usage", {})
@@ -94,7 +109,9 @@ class OpenAICompatibleProvider:
                 output_tokens=usage.get("completion_tokens", 0),
             )
         except (KeyError, IndexError, TypeError) as exc:
-            raise ProviderResponseError("AI provider response could not be mapped") from exc
+            raise ProviderResponseError(
+                "AI provider response could not be mapped"
+            ) from exc
 
         metadata = {}
         if raw_response.get("id"):
@@ -104,7 +121,9 @@ class OpenAICompatibleProvider:
             try:
                 structured_content = json.loads(content)
             except json.JSONDecodeError as exc:
-                raise StructuredOutputError("AI provider response is not valid structured output") from exc
+                raise StructuredOutputError(
+                    "AI provider response is not valid structured output"
+                ) from exc
             return AiGatewayResponse(
                 output_mode=output_mode,
                 structured_content=structured_content,

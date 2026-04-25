@@ -21,23 +21,35 @@ class Finding:
 SECRET_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     ("private_key_block", re.compile(r"-----BEGIN [A-Z ]*PRIVATE KEY-----")),
     ("aws_access_key", re.compile(r"AKIA[0-9A-Z]{16}")),
-    ("github_token", re.compile(r"gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,}")),
+    (
+        "github_token",
+        re.compile(r"gh[pousr]_[A-Za-z0-9_]{20,}|github_pat_[A-Za-z0-9_]{20,}"),
+    ),
     ("anthropic_key", re.compile(r"\bsk-ant-[A-Za-z0-9_-]{20,}\b")),
     ("openai_key", re.compile(r"\bsk-(?!ant-)[A-Za-z0-9_-]{20,}\b")),
     ("slack_token", re.compile(r"\bxox[baprs]-[A-Za-z0-9-]{20,}\b")),
     ("google_api_key", re.compile(r"\bAIza[0-9A-Za-z_-]{20,}\b")),
-    ("jwt_like", re.compile(r"\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b")),
+    (
+        "jwt_like",
+        re.compile(
+            r"\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b"
+        ),
+    ),
     (
         "aws_secret_assignment",
         re.compile(r"(?i)\baws_secret_access_key\b\s*[:=]\s*[\"']?([^\"'\s,}#]+)"),
     ),
     (
         "generic_secret_assignment",
-        re.compile(r"(?i)[\"']?\b(api[_-]?key|secret|token|password|passwd|pwd|authorization)\b[\"']?\s*[:=]\s*[\"']?([^\"'\s,}#]+)"),
+        re.compile(
+            r"(?i)[\"']?\b(api[_-]?key|secret|token|password|passwd|pwd|authorization)\b[\"']?\s*[:=]\s*[\"']?([^\"'\s,}#]+)"
+        ),
     ),
 )
 
-SAFE_PATH_PATTERN = re.compile(r"(^|/)(tests?|docs?|ai_docs|openspec|\.claude/skills)(/|$)|\.example\.|README\.md$|\.http$")
+SAFE_PATH_PATTERN = re.compile(
+    r"(^|/)(tests?|docs?|ai_docs|openspec|\.claude/skills)(/|$)|\.example\.|README\.md$|\.http$"
+)
 SAFE_LITERAL_PATTERN = re.compile(
     r"(?i)^(replace|replace-locally-do-not-commit|example|sample|dummy|test|test-token|secret-value|"
     r"secret-api-key|shared-token|plaintext-secret|none|null|true|false|str|api_key)$"
@@ -107,7 +119,9 @@ def _matched_value(pattern_name: str, match: re.Match[str]) -> str:
 def _is_safe_match(path: str, pattern_name: str, value: str) -> bool:
     if pattern_name != "generic_secret_assignment":
         return SAFE_LITERAL_PATTERN.fullmatch(value) is not None
-    if SAFE_LITERAL_PATTERN.fullmatch(value) or SAFE_ENV_REFERENCE_PATTERN.fullmatch(value):
+    if SAFE_LITERAL_PATTERN.fullmatch(value) or SAFE_ENV_REFERENCE_PATTERN.fullmatch(
+        value
+    ):
         return True
     if REFERENCE_VALUE_PATTERN.fullmatch(value):
         return True
@@ -136,7 +150,10 @@ def _git_diff(args: Iterable[str]) -> str:
 
 
 def _print_findings(findings: list[Finding]) -> None:
-    print("Secret scan failed: suspected secrets found in staged changes.", file=sys.stderr)
+    print(
+        "Secret scan failed: suspected secrets found in staged changes.",
+        file=sys.stderr,
+    )
     for finding in findings:
         location = finding.path
         if finding.line is not None:
@@ -146,10 +163,16 @@ def _print_findings(findings: list[Finding]) -> None:
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="Scan git diffs for committed secrets.")
+    parser = argparse.ArgumentParser(
+        description="Scan git diffs for committed secrets."
+    )
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--staged", action="store_true", help="scan staged changes")
-    group.add_argument("--range", dest="revision_range", help="scan a git revision range, for example origin/main...HEAD")
+    group.add_argument(
+        "--range",
+        dest="revision_range",
+        help="scan a git revision range, for example origin/main...HEAD",
+    )
     args = parser.parse_args()
 
     if args.revision_range:

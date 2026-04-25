@@ -24,7 +24,10 @@ class AiGatewayService:
     def generate(self, request: AiGatewayRequest) -> AiGatewayResponse:
         logger.info(
             "ai_gateway_request_started",
-            extra={"profile": str(request.capability_profile), "output_mode": request.output_mode.value},
+            extra={
+                "profile": str(request.capability_profile),
+                "output_mode": request.output_mode.value,
+            },
         )
         profile = self._config_repository.get_profile(request.capability_profile)
         provider_config = self._config_repository.get_provider(profile.provider)
@@ -32,7 +35,10 @@ class AiGatewayService:
         if provider is None:
             raise AiGatewayConfigError(
                 "AI gateway provider kind is not registered",
-                safe_context={"provider": provider_config.name, "kind": provider_config.kind},
+                safe_context={
+                    "provider": provider_config.name,
+                    "kind": provider_config.kind,
+                },
             )
         api_key = self._config_repository.resolve_provider_api_key(provider_config.name)
         response = provider.generate(

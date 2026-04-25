@@ -2,7 +2,9 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import Thread
 import unittest
 
-from app.capabilities.ai_gateway.providers.http_provider import HttpAiGatewayAvailabilityProvider
+from app.capabilities.ai_gateway.providers.http_provider import (
+    HttpAiGatewayAvailabilityProvider,
+)
 
 
 class HealthHandler(BaseHTTPRequestHandler):
@@ -46,7 +48,9 @@ class LocalHealthServer:
 
 
 class AiGatewayAvailabilityProbeTest(unittest.TestCase):
-    def test_http_provider_reports_available_when_health_endpoint_returns_success(self) -> None:
+    def test_http_provider_reports_available_when_health_endpoint_returns_success(
+        self,
+    ) -> None:
         with LocalHealthServer(200) as server:
             provider = HttpAiGatewayAvailabilityProvider(
                 base_url=server.base_url,
@@ -77,7 +81,9 @@ class AiGatewayAvailabilityProbeTest(unittest.TestCase):
         self.assertTrue(result.configured)
         self.assertEqual("AI gateway availability check failed.", result.reason)
 
-    def test_http_provider_reports_unavailable_when_gateway_is_unreachable(self) -> None:
+    def test_http_provider_reports_unavailable_when_gateway_is_unreachable(
+        self,
+    ) -> None:
         provider = HttpAiGatewayAvailabilityProvider(
             base_url="http://127.0.0.1:1",
             health_path="/health",

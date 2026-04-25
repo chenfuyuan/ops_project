@@ -6,7 +6,9 @@ from pydantic import ValidationError
 from app.capabilities.ai_gateway import AiGatewayFacade
 from app.capabilities.ai_gateway.config import FileAiGatewayConfigRepository
 from app.capabilities.ai_gateway.errors import AiGatewayConfigError
-from app.capabilities.ai_gateway.providers.http_provider import HttpAiGatewayAvailabilityProvider
+from app.capabilities.ai_gateway.providers.http_provider import (
+    HttpAiGatewayAvailabilityProvider,
+)
 from app.capabilities.ai_gateway.providers.unconfigured_provider import (
     StaticUnavailableAiGatewayProvider,
     UnconfiguredAiGatewayProvider,
@@ -27,7 +29,9 @@ def create_ai_gateway_facade(config_path: Path | None = None) -> AiGatewayFacade
     from app.capabilities.ai_gateway.providers.openai_compatible import (
         OpenAICompatibleProvider,
     )
-    from app.capabilities.ai_gateway.providers.urllib_transport import UrllibJsonTransport
+    from app.capabilities.ai_gateway.providers.urllib_transport import (
+        UrllibJsonTransport,
+    )
 
     resolved_config_path = config_path or _default_config_path()
     if resolved_config_path is None:

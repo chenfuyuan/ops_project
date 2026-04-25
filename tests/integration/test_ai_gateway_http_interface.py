@@ -29,7 +29,9 @@ class FakeAiGateway:
 
 
 class AiGatewayHttpInterfaceTest(unittest.TestCase):
-    def test_availability_endpoint_returns_503_when_gateway_is_unavailable(self) -> None:
+    def test_availability_endpoint_returns_503_when_gateway_is_unavailable(
+        self,
+    ) -> None:
         client = TestClient(build_http_app())
 
         response = client.get("/ai-gateway/availability")
@@ -63,7 +65,9 @@ class AiGatewayHttpInterfaceTest(unittest.TestCase):
             response.json(),
         )
 
-    def test_generate_endpoint_returns_503_when_generation_service_is_not_configured(self) -> None:
+    def test_generate_endpoint_returns_503_when_generation_service_is_not_configured(
+        self,
+    ) -> None:
         client = TestClient(build_http_app())
 
         response = client.post(

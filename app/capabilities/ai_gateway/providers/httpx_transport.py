@@ -9,10 +9,14 @@ class HttpxJsonTransport:
     def __init__(self, *, client: httpx.Client | None = None) -> None:
         self._client = client
 
-    def post_json(self, *, url: str, headers: dict, payload: dict, timeout: float) -> dict:
+    def post_json(
+        self, *, url: str, headers: dict, payload: dict, timeout: float
+    ) -> dict:
         try:
             if self._client is not None:
-                response = self._client.post(url, headers=headers, json=payload, timeout=timeout)
+                response = self._client.post(
+                    url, headers=headers, json=payload, timeout=timeout
+                )
             else:
                 with httpx.Client(timeout=timeout) as client:
                     response = client.post(url, headers=headers, json=payload)

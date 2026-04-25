@@ -1,7 +1,14 @@
 from fastapi import FastAPI
 
-from app.capabilities.ai_gateway import AiGatewayAvailability, AiGatewayRequest, AiGatewayResponse
-from app.interfaces.http.ai_gateway import AiGatewayHttpGateway, create_ai_gateway_router
+from app.capabilities.ai_gateway import (
+    AiGatewayAvailability,
+    AiGatewayRequest,
+    AiGatewayResponse,
+)
+from app.interfaces.http.ai_gateway import (
+    AiGatewayHttpGateway,
+    create_ai_gateway_router,
+)
 from app.interfaces.http.health import health_router
 
 

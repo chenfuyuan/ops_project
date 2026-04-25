@@ -28,7 +28,9 @@ class AiGatewayRequest(BaseModel):
     def validate_gateway_boundary(self) -> "AiGatewayRequest":
         profile = str(self.capability_profile).lower()
         if any(term in profile for term in _IMPLEMENTATION_DETAIL_PROFILE_TERMS):
-            raise ValueError("capability_profile must not expose implementation details")
+            raise ValueError(
+                "capability_profile must not expose implementation details"
+            )
         if self.output_mode is OutputMode.STRUCTURED and self.structured_output is None:
             raise ValueError("structured output mode requires structured_output")
         return self

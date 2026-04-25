@@ -48,7 +48,6 @@ def test_scan_diff_blocks_github_token() -> None:
     assert findings[0].pattern == "github_token"
 
 
-
 def test_scan_diff_allows_documented_placeholders() -> None:
     scanner = load_scanner()
     diff = """diff --git a/.env.example b/.env.example

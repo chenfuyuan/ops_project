@@ -16,7 +16,9 @@ class FakeAvailabilityProvider:
 
 
 class AiGatewayAvailabilityTest(unittest.TestCase):
-    def test_unconfigured_provider_reports_unavailable_without_network_access(self) -> None:
+    def test_unconfigured_provider_reports_unavailable_without_network_access(
+        self,
+    ) -> None:
         result = UnconfiguredAiGatewayProvider().check_availability()
 
         self.assertEqual("ai_gateway", result.component)

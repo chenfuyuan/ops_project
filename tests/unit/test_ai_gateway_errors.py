@@ -24,10 +24,16 @@ class AiGatewayErrorsTest(unittest.TestCase):
         self.assertIn("provider_call_failed", str(error))
 
     def test_specific_errors_have_default_codes(self) -> None:
-        self.assertEqual("ai_gateway_config_error", AiGatewayConfigError("missing").code)
+        self.assertEqual(
+            "ai_gateway_config_error", AiGatewayConfigError("missing").code
+        )
         self.assertEqual("provider_timeout", ProviderTimeoutError("timeout").code)
-        self.assertEqual("provider_response_error", ProviderResponseError("bad response").code)
-        self.assertEqual("structured_output_error", StructuredOutputError("bad json").code)
+        self.assertEqual(
+            "provider_response_error", ProviderResponseError("bad response").code
+        )
+        self.assertEqual(
+            "structured_output_error", StructuredOutputError("bad json").code
+        )
 
     def test_error_hierarchy_is_stable(self) -> None:
         self.assertIsInstance(AiGatewayConfigError("missing"), AiGatewayError)

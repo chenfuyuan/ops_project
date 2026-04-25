@@ -33,7 +33,9 @@ class ArchitectureRulesTest(unittest.TestCase):
                 continue
             self._assert_no_prefix(path, provider_internal_import)
 
-    def test_api_bootstrap_does_not_import_generation_provider_at_module_load(self) -> None:
+    def test_api_bootstrap_does_not_import_generation_provider_at_module_load(
+        self,
+    ) -> None:
         bootstrap_path = APP_ROOT / "bootstrap" / "ai_gateway.py"
         forbidden_top_level_imports = {
             "app.capabilities.ai_gateway.providers.httpx_transport",
@@ -63,7 +65,9 @@ class ArchitectureRulesTest(unittest.TestCase):
 
         self.assertIn("AI_GATEWAY_CONFIG_PATH: /app/config/ai_gateway.json", compose)
         self.assertIn("AI_GATEWAY_API_KEY: ${AI_GATEWAY_API_KEY}", compose)
-        self.assertIn("./config/ai_gateway.json:/app/config/ai_gateway.json:ro", compose)
+        self.assertIn(
+            "./config/ai_gateway.json:/app/config/ai_gateway.json:ro", compose
+        )
 
     def test_ai_gateway_does_not_contain_business_task_terms(self) -> None:
         business_terms = {"outline", "blueprint", "chapter", "大纲", "蓝图", "章节"}

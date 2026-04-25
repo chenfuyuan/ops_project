@@ -86,9 +86,13 @@ class LocalRuntimeHealthServer:
 
 
 class AiGatewayRuntimeWiringTest(unittest.TestCase):
-    def test_create_api_app_reports_safe_503_when_config_path_points_to_missing_file(self) -> None:
+    def test_create_api_app_reports_safe_503_when_config_path_points_to_missing_file(
+        self,
+    ) -> None:
         previous_config_path = os.environ.get("AI_GATEWAY_CONFIG_PATH")
-        os.environ["AI_GATEWAY_CONFIG_PATH"] = "/tmp/person-up-missing-ai-gateway-config.json"
+        os.environ["AI_GATEWAY_CONFIG_PATH"] = (
+            "/tmp/person-up-missing-ai-gateway-config.json"
+        )
 
         try:
             client = TestClient(create_api_app())
@@ -102,9 +106,13 @@ class AiGatewayRuntimeWiringTest(unittest.TestCase):
         self.assertEqual(503, response.status_code)
         self.assertEqual("unavailable", response.json()["status"])
         self.assertTrue(response.json()["configured"])
-        self.assertEqual("AI gateway config could not be loaded.", response.json()["reason"])
+        self.assertEqual(
+            "AI gateway config could not be loaded.", response.json()["reason"]
+        )
 
-    def test_create_api_app_reports_safe_503_when_config_path_points_to_directory(self) -> None:
+    def test_create_api_app_reports_safe_503_when_config_path_points_to_directory(
+        self,
+    ) -> None:
         previous_config_path = os.environ.get("AI_GATEWAY_CONFIG_PATH")
 
         try:
@@ -122,7 +130,9 @@ class AiGatewayRuntimeWiringTest(unittest.TestCase):
         self.assertEqual(503, response.status_code)
         self.assertEqual("unavailable", response.json()["status"])
         self.assertTrue(response.json()["configured"])
-        self.assertEqual("AI gateway config could not be loaded.", response.json()["reason"])
+        self.assertEqual(
+            "AI gateway config could not be loaded.", response.json()["reason"]
+        )
 
     def test_create_api_app_reports_safe_503_when_api_key_env_is_missing(self) -> None:
         previous_values = {
@@ -175,7 +185,9 @@ class AiGatewayRuntimeWiringTest(unittest.TestCase):
         self.assertEqual(503, response.status_code)
         self.assertEqual("unavailable", response.json()["status"])
         self.assertTrue(response.json()["configured"])
-        self.assertEqual("AI gateway config could not be loaded.", response.json()["reason"])
+        self.assertEqual(
+            "AI gateway config could not be loaded.", response.json()["reason"]
+        )
 
     def test_unconfigured_gateway_is_reported_through_bootstrapped_app(self) -> None:
         previous_config_path = os.environ.get("AI_GATEWAY_CONFIG_PATH")

@@ -1,7 +1,15 @@
 import unittest
 
-from app.capabilities.ai_gateway import AiGatewayRequest, CapabilityProfileName, OutputMode, TokenUsage
-from app.capabilities.ai_gateway.config import AiGatewayProfileConfig, AiGatewayProviderConfig
+from app.capabilities.ai_gateway import (
+    AiGatewayRequest,
+    CapabilityProfileName,
+    OutputMode,
+    TokenUsage,
+)
+from app.capabilities.ai_gateway.config import (
+    AiGatewayProfileConfig,
+    AiGatewayProviderConfig,
+)
 from app.capabilities.ai_gateway.contracts.response import AiGatewayResponse
 from app.capabilities.ai_gateway.service import AiGatewayService
 
@@ -47,7 +55,9 @@ class AiGatewayLoggingTest(unittest.TestCase):
             providers={"openai-compatible": FakeProvider()},
         )
 
-        with self.assertLogs("app.capabilities.ai_gateway.service", level="INFO") as logs:
+        with self.assertLogs(
+            "app.capabilities.ai_gateway.service", level="INFO"
+        ) as logs:
             service.generate(
                 AiGatewayRequest(
                     capability_profile=CapabilityProfileName("balanced_text"),
@@ -61,7 +71,9 @@ class AiGatewayLoggingTest(unittest.TestCase):
         serialized_records = str(record_fields)
         self.assertIn("ai_gateway_request_started", messages)
         self.assertIn("ai_gateway_request_completed", messages)
-        self.assertTrue(any(fields.get("profile") == "balanced_text" for fields in record_fields))
+        self.assertTrue(
+            any(fields.get("profile") == "balanced_text" for fields in record_fields)
+        )
         self.assertNotIn("secret-api-key", serialized_records)
         self.assertNotIn("完整 prompt 不应进入日志", serialized_records)
         self.assertNotIn("完整模型输出不应进入日志", serialized_records)

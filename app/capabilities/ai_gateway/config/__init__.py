@@ -1,4 +1,6 @@
-from app.capabilities.ai_gateway.config.file_repository import FileAiGatewayConfigRepository
+from app.capabilities.ai_gateway.config.file_repository import (
+    FileAiGatewayConfigRepository,
+)
 from app.capabilities.ai_gateway.config.models import (
     AiGatewayConfig,
     AiGatewayProfileConfig,

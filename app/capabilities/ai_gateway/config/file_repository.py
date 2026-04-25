@@ -63,7 +63,10 @@ class FileAiGatewayConfigRepository:
         if not api_key:
             raise AiGatewayConfigError(
                 "AI gateway provider API key environment variable is missing",
-                safe_context={"provider": provider_name, "api_key_env": provider.api_key_env},
+                safe_context={
+                    "provider": provider_name,
+                    "api_key_env": provider.api_key_env,
+                },
             )
         return api_key
 

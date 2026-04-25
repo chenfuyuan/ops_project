@@ -9,13 +9,20 @@ from app.capabilities.ai_gateway import (
     ProviderCallError,
     ProviderTimeoutError,
 )
-from app.capabilities.ai_gateway.config import AiGatewayProfileConfig, AiGatewayProviderConfig
+from app.capabilities.ai_gateway.config import (
+    AiGatewayProfileConfig,
+    AiGatewayProviderConfig,
+)
 from app.capabilities.ai_gateway.providers.httpx_transport import HttpxJsonTransport
-from app.capabilities.ai_gateway.providers.openai_compatible import OpenAICompatibleProvider
+from app.capabilities.ai_gateway.providers.openai_compatible import (
+    OpenAICompatibleProvider,
+)
 
 
 class AiGatewayOpenAICompatibleProviderIntegrationTest(unittest.TestCase):
-    def test_provider_maps_request_and_response_through_local_http_transport(self) -> None:
+    def test_provider_maps_request_and_response_through_local_http_transport(
+        self,
+    ) -> None:
         captured_requests: list[dict] = []
 
         def handler(request: httpx.Request) -> httpx.Response:
@@ -23,7 +30,9 @@ class AiGatewayOpenAICompatibleProviderIntegrationTest(unittest.TestCase):
                 {
                     "url": str(request.url),
                     "authorization": request.headers.get("Authorization"),
-                    "json": dict(request.read() and __import__("json").loads(request.content)),
+                    "json": dict(
+                        request.read() and __import__("json").loads(request.content)
+                    ),
                 }
             )
             return httpx.Response(
@@ -34,7 +43,11 @@ class AiGatewayOpenAICompatibleProviderIntegrationTest(unittest.TestCase):
                 },
             )
 
-        provider = OpenAICompatibleProvider(transport=HttpxJsonTransport(client=httpx.Client(transport=httpx.MockTransport(handler))))
+        provider = OpenAICompatibleProvider(
+            transport=HttpxJsonTransport(
+                client=httpx.Client(transport=httpx.MockTransport(handler))
+            )
+        )
 
         response = provider.generate(
             request=self._request(),
@@ -51,7 +64,11 @@ class AiGatewayOpenAICompatibleProviderIntegrationTest(unittest.TestCase):
     def test_provider_converts_http_status_error(self) -> None:
         provider = OpenAICompatibleProvider(
             transport=HttpxJsonTransport(
-                client=httpx.Client(transport=httpx.MockTransport(lambda request: httpx.Response(500, json={"error": "boom"})))
+                client=httpx.Client(
+                    transport=httpx.MockTransport(
+                        lambda request: httpx.Response(500, json={"error": "boom"})
+                    )
+                )
             )
         )
 
@@ -67,7 +84,11 @@ class AiGatewayOpenAICompatibleProviderIntegrationTest(unittest.TestCase):
         def handler(request: httpx.Request) -> httpx.Response:
             raise httpx.TimeoutException("slow")
 
-        provider = OpenAICompatibleProvider(transport=HttpxJsonTransport(client=httpx.Client(transport=httpx.MockTransport(handler))))
+        provider = OpenAICompatibleProvider(
+            transport=HttpxJsonTransport(
+                client=httpx.Client(transport=httpx.MockTransport(handler))
+            )
+        )
 
         with self.assertRaises(ProviderTimeoutError):
             provider.generate(

@@ -3,7 +3,11 @@ from typing import Protocol
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import JSONResponse
 
-from app.capabilities.ai_gateway import AiGatewayAvailability, AiGatewayRequest, AiGatewayResponse
+from app.capabilities.ai_gateway import (
+    AiGatewayAvailability,
+    AiGatewayRequest,
+    AiGatewayResponse,
+)
 
 
 class AiGatewayHttpGateway(Protocol):
