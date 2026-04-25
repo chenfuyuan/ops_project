@@ -33,6 +33,38 @@ class ArchitectureRulesTest(unittest.TestCase):
                 continue
             self._assert_no_prefix(path, provider_internal_import)
 
+    def test_api_bootstrap_does_not_import_generation_provider_at_module_load(self) -> None:
+        bootstrap_path = APP_ROOT / "bootstrap" / "ai_gateway.py"
+        forbidden_top_level_imports = {
+            "app.capabilities.ai_gateway.providers.httpx_transport",
+            "app.capabilities.ai_gateway.providers.openai_compatible",
+        }
+        tree = ast.parse(bootstrap_path.read_text(), filename=str(bootstrap_path))
+
+        for node in tree.body:
+            if isinstance(node, ast.ImportFrom) and node.module:
+                self.assertNotIn(
+                    node.module,
+                    forbidden_top_level_imports,
+                    f"{bootstrap_path} imports optional generation provider at module load",
+                )
+
+    def test_docker_api_starts_without_runtime_uv_sync(self) -> None:
+        dockerfile = (ROOT / "Dockerfile").read_text()
+        compose = (ROOT / "docker-compose.yml").read_text()
+
+        self.assertIn('/app/.venv/bin/uvicorn", "app.api:app"', dockerfile)
+        self.assertIn('/app/.venv/bin/uvicorn", "app.api:app"', compose)
+        self.assertNotIn('"uv", "run", "uvicorn", "app.api:app"', dockerfile)
+        self.assertNotIn('"uv", "run", "uvicorn", "app.api:app"', compose)
+
+    def test_docker_api_receives_ai_gateway_runtime_config(self) -> None:
+        compose = (ROOT / "docker-compose.yml").read_text()
+
+        self.assertIn("AI_GATEWAY_CONFIG_PATH: /app/config/ai_gateway.json", compose)
+        self.assertIn("AI_GATEWAY_API_KEY: ${AI_GATEWAY_API_KEY}", compose)
+        self.assertIn("./config/ai_gateway.json:/app/config/ai_gateway.json:ro", compose)
+
     def test_ai_gateway_does_not_contain_business_task_terms(self) -> None:
         business_terms = {"outline", "blueprint", "chapter", "大纲", "蓝图", "章节"}
         for path in APP_ROOT.glob("capabilities/ai_gateway/**/*.py"):

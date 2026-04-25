@@ -34,6 +34,8 @@
 - `capabilities/infrastructure/`
 - `interfaces/`
 
+当 `capabilities/` 对外新增或修改方法时，必须同步提供对应的 test HTTP 接口，并在 `tests/http/` 中补充可手动执行的请求示例。test HTTP 接口应只做中性能力验证，不得把业务任务语义塞进 capability。
+
 ### 验证内容
 集成测试重点验证：
 - 协议映射是否正确

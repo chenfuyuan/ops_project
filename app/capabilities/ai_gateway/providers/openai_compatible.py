@@ -48,14 +48,14 @@ class OpenAICompatibleProvider:
                     timeout=profile.timeout_seconds,
                 )
                 return self._response(raw_response, request.output_mode)
-            except TimeoutError as exc:
+            except TimeoutError:
                 last_error = ProviderTimeoutError(
                     "AI provider call timed out",
                     safe_context={"provider": provider_config.name, "attempt": attempt + 1},
                 )
             except ProviderCallError:
                 raise
-            except Exception as exc:
+            except Exception:
                 last_error = ProviderCallError(
                     "AI provider call failed",
                     safe_context={"provider": provider_config.name, "attempt": attempt + 1},

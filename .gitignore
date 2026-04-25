@@ -62,6 +62,10 @@ temp/
 !.env.example
 !.env.sample
 
+# Local AI gateway configuration
+config/ai_gateway.json
+!config/ai_gateway.example.json
+
 # Jupyter
 .ipynb_checkpoints/
 

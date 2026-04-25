@@ -61,6 +61,14 @@ class AiGatewayConfigTest(unittest.TestCase):
         profile = repository.get_profile(CapabilityProfileName("balanced_text"))
         self.assertEqual("gpt-compatible-small", profile.model)
 
+    def test_repository_returns_default_provider_for_gateway_level_diagnostics(self) -> None:
+        repository = FileAiGatewayConfigRepository.from_dict(self._config_data())
+
+        provider = repository.first_provider()
+
+        self.assertEqual("primary-openai-compatible", provider.name)
+        self.assertEqual("AI_GATEWAY_API_KEY", provider.api_key_env)
+
     def test_repository_resolves_provider_api_key_from_environment(self) -> None:
         repository = FileAiGatewayConfigRepository.from_dict(self._config_data())
 

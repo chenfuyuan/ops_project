@@ -1,0 +1,22 @@
+{
+  "profiles": [
+    {
+      "name": "smoke-test",
+      "provider": "default",
+      "model": "replace-with-model-name",
+      "capability_tags": [],
+      "context_window": 8192,
+      "cost_tier": "balanced",
+      "timeout_seconds": 30,
+      "retry_attempts": 1
+    }
+  ],
+  "providers": [
+    {
+      "name": "default",
+      "kind": "openai-compatible",
+      "base_url": "https://replace-with-ai-gateway-host/v1",
+      "api_key_env": "AI_GATEWAY_API_KEY"
+    }
+  ]
+}

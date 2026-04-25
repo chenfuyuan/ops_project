@@ -6,9 +6,14 @@ from app.capabilities.ai_gateway.contracts.models import (
     StructuredOutputConstraint,
 )
 from app.capabilities.ai_gateway.contracts.request import AiGatewayRequest
-from app.capabilities.ai_gateway.contracts.response import AiGatewayResponse, TokenUsage
+from app.capabilities.ai_gateway.contracts.response import (
+    AiGatewayAvailability,
+    AiGatewayResponse,
+    TokenUsage,
+)
 
 __all__ = [
+    "AiGatewayAvailability",
     "AiGatewayMessage",
     "AiGatewayRequest",
     "AiGatewayResponse",

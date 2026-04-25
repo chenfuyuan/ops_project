@@ -51,6 +51,12 @@ class FileAiGatewayConfigRepository:
                 safe_context={"provider": name},
             ) from exc
 
+    def first_provider(self) -> AiGatewayProviderConfig:
+        try:
+            return next(iter(self._providers.values()))
+        except StopIteration as exc:
+            raise AiGatewayConfigError("AI gateway provider is not configured") from exc
+
     def resolve_provider_api_key(self, provider_name: str) -> str:
         provider = self.get_provider(provider_name)
         api_key = os.environ.get(provider.api_key_env)

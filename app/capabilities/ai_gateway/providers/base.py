@@ -5,7 +5,18 @@ from app.capabilities.ai_gateway.config.models import (
     AiGatewayProviderConfig,
 )
 from app.capabilities.ai_gateway.contracts.request import AiGatewayRequest
-from app.capabilities.ai_gateway.contracts.response import AiGatewayResponse
+from app.capabilities.ai_gateway.contracts.response import (
+    AiGatewayAvailability,
+    AiGatewayResponse,
+)
+
+
+@runtime_checkable
+class AiGatewayAvailabilityProvider(Protocol):
+    """AI 网关诊断流程依赖的可用性检查抽象。"""
+
+    def check_availability(self) -> AiGatewayAvailability:
+        """返回不含敏感信息的网关可用性结果。"""
 
 
 @runtime_checkable

@@ -16,5 +16,8 @@ class AiGatewayConfigRepository(Protocol):
     def get_provider(self, name: str) -> AiGatewayProviderConfig:
         """按 provider 名称读取外部模型连接配置。"""
 
+    def first_provider(self) -> AiGatewayProviderConfig:
+        """读取默认 provider，用于不依赖特定业务请求的网关级诊断。"""
+
     def resolve_provider_api_key(self, provider_name: str) -> str:
         """按 provider 名称解析运行时密钥。"""

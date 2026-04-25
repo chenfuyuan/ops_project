@@ -3,12 +3,16 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: ["uv", "run", "uvicorn", "app.api:app", "--host", "0.0.0.0", "--port", "8000"]
+    command: ["/app/.venv/bin/uvicorn", "app.api:app", "--host", "0.0.0.0", "--port", "8000"]
     environment:
       PERSON_UP_APP_ENV: local
       PERSON_UP_REDIS_URL: redis://redis:6379/0
       PERSON_UP_CELERY_BROKER_URL: redis://redis:6379/0
       PERSON_UP_CELERY_RESULT_BACKEND: redis://redis:6379/1
+      AI_GATEWAY_CONFIG_PATH: /app/config/ai_gateway.json
+      AI_GATEWAY_API_KEY: ${AI_GATEWAY_API_KEY}
+    volumes:
+      - ./config/ai_gateway.json:/app/config/ai_gateway.json:ro
     depends_on:
       - redis
     ports:

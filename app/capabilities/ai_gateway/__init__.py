@@ -6,7 +6,11 @@ from app.capabilities.ai_gateway.contracts.models import (
     StructuredOutputConstraint,
 )
 from app.capabilities.ai_gateway.contracts.request import AiGatewayRequest
-from app.capabilities.ai_gateway.contracts.response import AiGatewayResponse, TokenUsage
+from app.capabilities.ai_gateway.contracts.response import (
+    AiGatewayAvailability,
+    AiGatewayResponse,
+    TokenUsage,
+)
 from app.capabilities.ai_gateway.errors import (
     AiGatewayConfigError,
     AiGatewayError,
@@ -18,6 +22,7 @@ from app.capabilities.ai_gateway.errors import (
 from app.capabilities.ai_gateway.facade import AiGatewayFacade
 
 __all__ = [
+    "AiGatewayAvailability",
     "AiGatewayConfigError",
     "AiGatewayError",
     "AiGatewayFacade",

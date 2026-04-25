@@ -1,0 +1,29 @@
+@baseUrl = http://127.0.0.1:8000
+
+### AI gateway availability through the application
+GET {{baseUrl}}/ai-gateway/availability
+
+### AI gateway generate through the application
+POST {{baseUrl}}/ai-gateway/generate
+Content-Type: application/json
+
+{
+  "capability_profile": "smoke-test",
+  "messages": [
+    {
+      "role": "user",
+      "content": "ping"
+    }
+  ],
+  "output_mode": "text"
+}
+
+# Optional direct gateway probe for local debugging only.
+# Keep real hosts and tokens out of committed files.
+# @aiGatewayBaseUrl = https://replace-with-gateway-host
+# @aiGatewayHealthPath = /health
+# @aiGatewayApiKey = replace-locally-do-not-commit
+
+### Optional direct AI gateway health check
+# GET {{aiGatewayBaseUrl}}{{aiGatewayHealthPath}}
+# Authorization: Bearer {{aiGatewayApiKey}}

@@ -25,3 +25,22 @@ class AiGatewayResponse(BaseModel):
     structured_content: dict[str, Any] | list[Any] | None = None
     usage: TokenUsage
     metadata: dict[str, Any] = Field(default_factory=dict)
+
+
+class AiGatewayAvailability(BaseModel):
+    """AI 网关诊断接口使用的中性可用性结果。"""
+
+    component: str = "ai_gateway"
+    status: str
+    configured: bool
+    reason: str | None = None
+
+    @classmethod
+    def available(cls) -> "AiGatewayAvailability":
+        """表示 AI 网关已配置且健康探测成功。"""
+        return cls(status="available", configured=True)
+
+    @classmethod
+    def unavailable(cls, *, configured: bool, reason: str) -> "AiGatewayAvailability":
+        """表示 AI 网关当前不可用，并返回不含敏感信息的原因。"""
+        return cls(status="unavailable", configured=configured, reason=reason)
