@@ -22,6 +22,24 @@ class ArchitectureRulesTest(unittest.TestCase):
         for path in APP_ROOT.glob("capabilities/**/*.py"):
             self._assert_no_prefix(path, "app.business")
 
+    def test_ai_gateway_keeps_provider_details_internal(self) -> None:
+        provider_internal_import = "app.capabilities.ai_gateway.providers"
+        allowed_roots = {
+            APP_ROOT / "capabilities" / "ai_gateway",
+            APP_ROOT / "bootstrap",
+        }
+        for path in APP_ROOT.glob("**/*.py"):
+            if any(path.is_relative_to(root) for root in allowed_roots):
+                continue
+            self._assert_no_prefix(path, provider_internal_import)
+
+    def test_ai_gateway_does_not_contain_business_task_terms(self) -> None:
+        business_terms = {"outline", "blueprint", "chapter", "大纲", "蓝图", "章节"}
+        for path in APP_ROOT.glob("capabilities/ai_gateway/**/*.py"):
+            lowered = path.read_text().lower()
+            for term in business_terms:
+                self.assertNotIn(term, lowered, f"{path} contains business term {term}")
+
     def test_shared_does_not_depend_on_business_modules(self) -> None:
         for path in APP_ROOT.glob("shared/**/*.py"):
             self._assert_no_prefix(path, "app.business")
