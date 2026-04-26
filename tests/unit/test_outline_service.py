@@ -1,12 +1,36 @@
 import unittest
 from uuid import UUID
 
-from app.business.novel_generate.nodes.outline.dto import (
+from app.business.novel_generate.nodes.outline.application.dto import (
     CreateSeedCommand,
     UpdateChapterCommand,
     UpdateVolumeCommand,
 )
-from app.business.novel_generate.nodes.outline.entities import (
+from app.business.novel_generate.nodes.outline.application.use_cases.confirm_skeleton import (
+    ConfirmSkeletonUseCase,
+)
+from app.business.novel_generate.nodes.outline.application.use_cases.create_seed import (
+    CreateSeedUseCase,
+)
+from app.business.novel_generate.nodes.outline.application.use_cases.expand_volume import (
+    ExpandVolumeUseCase,
+)
+from app.business.novel_generate.nodes.outline.application.use_cases.generate_skeleton import (
+    GenerateSkeletonUseCase,
+)
+from app.business.novel_generate.nodes.outline.application.use_cases.get_outline import (
+    GetOutlineUseCase,
+)
+from app.business.novel_generate.nodes.outline.application.use_cases.get_seed import (
+    GetSeedUseCase,
+)
+from app.business.novel_generate.nodes.outline.application.use_cases.update_chapter import (
+    UpdateChapterUseCase,
+)
+from app.business.novel_generate.nodes.outline.application.use_cases.update_volume import (
+    UpdateVolumeUseCase,
+)
+from app.business.novel_generate.nodes.outline.domain.models import (
     ChapterSummary,
     Outline,
     OutlineStatus,
@@ -15,7 +39,7 @@ from app.business.novel_generate.nodes.outline.entities import (
     SkeletonStatus,
     SkeletonVolume,
 )
-from app.business.novel_generate.nodes.outline.service import OutlineNodeService
+from app.business.novel_generate.nodes.outline.facade import OutlineFacade
 
 
 class InMemoryOutlineRepository:
@@ -76,7 +100,10 @@ class InMemoryOutlineRepository:
         return summaries
 
     def get_chapters_by_volume(self, volume_id: UUID) -> list[ChapterSummary]:
-        return [self.chapters[chapter_id] for chapter_id in self.chapters_by_volume.get(volume_id, [])]
+        return [
+            self.chapters[chapter_id]
+            for chapter_id in self.chapters_by_volume.get(volume_id, [])
+        ]
 
     def delete_chapters_by_volume(self, volume_id: UUID) -> None:
         for chapter_id in self.chapters_by_volume.pop(volume_id, []):
@@ -131,11 +158,24 @@ class StubOutlineAiPort:
         ]
 
 
-class OutlineNodeServiceTest(unittest.TestCase):
+class OutlineFacadeTest(unittest.TestCase):
     def setUp(self) -> None:
         self.repository = InMemoryOutlineRepository()
         self.ai_port = StubOutlineAiPort()
-        self.service = OutlineNodeService(self.repository, self.ai_port)
+        get_seed = GetSeedUseCase(self.repository)
+        self.facade = OutlineFacade(
+            create_seed=CreateSeedUseCase(self.repository),
+            get_seed=get_seed,
+            generate_skeleton=GenerateSkeletonUseCase(
+                self.repository, self.ai_port, get_seed
+            ),
+            confirm_skeleton=ConfirmSkeletonUseCase(self.repository),
+            expand_volume=ExpandVolumeUseCase(self.repository, self.ai_port, get_seed),
+            update_volume=UpdateVolumeUseCase(self.repository),
+            update_chapter=UpdateChapterUseCase(self.repository),
+            get_outline=GetOutlineUseCase(self.repository, get_seed),
+            repository=self.repository,
+        )
 
     def _seed_command(self) -> CreateSeedCommand:
         return CreateSeedCommand(
@@ -148,22 +188,22 @@ class OutlineNodeServiceTest(unittest.TestCase):
         )
 
     def _create_seed(self) -> Seed:
-        return self.service.create_seed(self._seed_command())
+        return self.facade.create_seed(self._seed_command())
 
     def _confirmed_skeleton(self) -> Skeleton:
         seed = self._create_seed()
-        skeleton = self.service.generate_skeleton(seed.id)
-        return self.service.confirm_skeleton(skeleton.id)
+        skeleton = self.facade.generate_skeleton(seed.id)
+        return self.facade.confirm_skeleton(skeleton.id)
 
     def test_create_seed_persists_complete_seed(self) -> None:
-        seed = self.service.create_seed(self._seed_command())
+        seed = self.facade.create_seed(self._seed_command())
 
         self.assertEqual("群星回声", seed.title)
         self.assertEqual(seed, self.repository.get_seed(seed.id))
 
     def test_create_seed_rejects_missing_required_field(self) -> None:
         with self.assertRaisesRegex(ValueError, "title"):
-            self.service.create_seed(
+            self.facade.create_seed(
                 CreateSeedCommand(
                     title=" ",
                     genre="科幻",
@@ -173,24 +213,28 @@ class OutlineNodeServiceTest(unittest.TestCase):
                 )
             )
 
-    def test_generate_skeleton_creates_draft_skeleton_and_replaces_existing_one(self) -> None:
+    def test_generate_skeleton_creates_draft_skeleton_and_replaces_existing_one(
+        self,
+    ) -> None:
         seed = self._create_seed()
-        first = self.service.generate_skeleton(seed.id)
+        first = self.facade.generate_skeleton(seed.id)
         self.ai_port.skeleton_titles = ["新开端", "新终局"]
 
-        second = self.service.generate_skeleton(seed.id)
+        second = self.facade.generate_skeleton(seed.id)
 
         self.assertEqual(SkeletonStatus.DRAFT, first.status)
         self.assertEqual(SkeletonStatus.DRAFT, second.status)
         self.assertNotEqual(first.id, second.id)
-        self.assertEqual(["新开端", "新终局"], [volume.title for volume in second.volumes])
+        self.assertEqual(
+            ["新开端", "新终局"], [volume.title for volume in second.volumes]
+        )
         self.assertEqual(second, self.repository.get_skeleton_by_seed(seed.id))
 
     def test_get_skeleton_returns_existing_skeleton(self) -> None:
         seed = self._create_seed()
-        skeleton = self.service.generate_skeleton(seed.id)
+        skeleton = self.facade.generate_skeleton(seed.id)
 
-        self.assertEqual(skeleton, self.service.get_skeleton(skeleton.id))
+        self.assertEqual(skeleton, self.facade.get_skeleton(skeleton.id))
 
     def test_confirm_skeleton_requires_draft_status(self) -> None:
         skeleton = self._confirmed_skeleton()
@@ -198,29 +242,33 @@ class OutlineNodeServiceTest(unittest.TestCase):
         self.assertEqual(SkeletonStatus.CONFIRMED, skeleton.status)
         self.assertIsNotNone(skeleton.confirmed_at)
         with self.assertRaisesRegex(ValueError, "已确认"):
-            self.service.confirm_skeleton(skeleton.id)
+            self.facade.confirm_skeleton(skeleton.id)
 
-    def test_expand_volume_requires_confirmed_skeleton_and_replaces_existing_chapters(self) -> None:
+    def test_expand_volume_requires_confirmed_skeleton_and_replaces_existing_chapters(
+        self,
+    ) -> None:
         seed = self._create_seed()
-        draft = self.service.generate_skeleton(seed.id)
+        draft = self.facade.generate_skeleton(seed.id)
 
         with self.assertRaisesRegex(ValueError, "骨架未确认"):
-            self.service.expand_volume(draft.id, draft.volumes[0].id)
+            self.facade.expand_volume(draft.id, draft.volumes[0].id)
 
-        confirmed = self.service.confirm_skeleton(draft.id)
-        first = self.service.expand_volume(confirmed.id, confirmed.volumes[0].id)
+        confirmed = self.facade.confirm_skeleton(draft.id)
+        first = self.facade.expand_volume(confirmed.id, confirmed.volumes[0].id)
         self.ai_port.chapter_titles = ["重写章"]
-        second = self.service.expand_volume(confirmed.id, confirmed.volumes[0].id)
+        second = self.facade.expand_volume(confirmed.id, confirmed.volumes[0].id)
 
         self.assertEqual(["第一章", "第二章"], [chapter.title for chapter in first])
         self.assertEqual(["重写章"], [chapter.title for chapter in second])
-        self.assertEqual(second, self.repository.get_chapters_by_volume(confirmed.volumes[0].id))
+        self.assertEqual(
+            second, self.repository.get_chapters_by_volume(confirmed.volumes[0].id)
+        )
 
     def test_update_volume_marks_existing_chapters_stale(self) -> None:
         skeleton = self._confirmed_skeleton()
-        self.service.expand_volume(skeleton.id, skeleton.volumes[0].id)
+        self.facade.expand_volume(skeleton.id, skeleton.volumes[0].id)
 
-        updated = self.service.update_volume(
+        updated = self.facade.update_volume(
             UpdateVolumeCommand(
                 volume_id=skeleton.volumes[0].id,
                 title="改写卷",
@@ -238,9 +286,9 @@ class OutlineNodeServiceTest(unittest.TestCase):
 
     def test_update_chapter_changes_title_and_summary(self) -> None:
         skeleton = self._confirmed_skeleton()
-        chapters = self.service.expand_volume(skeleton.id, skeleton.volumes[0].id)
+        chapters = self.facade.expand_volume(skeleton.id, skeleton.volumes[0].id)
 
-        updated = self.service.update_chapter(
+        updated = self.facade.update_chapter(
             UpdateChapterCommand(
                 chapter_id=chapters[0].id,
                 title="改写章",
@@ -251,24 +299,28 @@ class OutlineNodeServiceTest(unittest.TestCase):
         self.assertEqual("改写章", updated.title)
         self.assertEqual("改写摘要", updated.summary)
 
-    def test_get_outline_reports_complete_only_when_all_volumes_are_expanded(self) -> None:
+    def test_get_outline_reports_complete_only_when_all_volumes_are_expanded(
+        self,
+    ) -> None:
         seed = self._create_seed()
 
         with self.assertRaisesRegex(ValueError, "大纲未找到"):
-            self.service.get_outline(seed.id)
+            self.facade.get_outline(seed.id)
 
-        skeleton = self.service.confirm_skeleton(self.service.generate_skeleton(seed.id).id)
-        partial = self.service.expand_volume(skeleton.id, skeleton.volumes[0].id)
-        outline = self.service.get_outline(seed.id)
+        skeleton = self.facade.confirm_skeleton(
+            self.facade.generate_skeleton(seed.id).id
+        )
+        partial = self.facade.expand_volume(skeleton.id, skeleton.volumes[0].id)
+        outline = self.facade.get_outline(seed.id)
 
         self.assertEqual(OutlineStatus.IN_PROGRESS, outline.status)
         self.assertEqual(partial, outline.chapters_by_volume[skeleton.volumes[0].id])
         self.assertEqual([], outline.chapters_by_volume[skeleton.volumes[1].id])
 
         for volume in skeleton.volumes[1:]:
-            self.service.expand_volume(skeleton.id, volume.id)
+            self.facade.expand_volume(skeleton.id, volume.id)
 
-        complete = self.service.get_outline(seed.id)
+        complete = self.facade.get_outline(seed.id)
 
         self.assertEqual(OutlineStatus.COMPLETE, complete.status)
 

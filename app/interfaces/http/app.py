@@ -16,8 +16,8 @@ from app.interfaces.http.ai_gateway import (
 )
 from app.interfaces.http.health import health_router
 from app.interfaces.http.outline import (
-    OutlineHttpService,
-    UnavailableOutlineService,
+    OutlineHttpFacade,
+    UnavailableOutlineFacade,
     create_outline_router,
 )
 
@@ -40,7 +40,7 @@ class UnavailableAiGatewayChecker:
 def build_http_app(
     *,
     ai_gateway_checker: AiGatewayHttpGateway | None = None,
-    outline_service: OutlineHttpService | None = None,
+    outline_facade: OutlineHttpFacade | None = None,
 ) -> FastAPI:
     """构建 FastAPI app；具体业务和 capability 实现由 bootstrap 注入。"""
     app = FastAPI(title="Person Up Ops Project")
@@ -48,7 +48,9 @@ def build_http_app(
     app.include_router(
         create_ai_gateway_router(ai_gateway_checker or UnavailableAiGatewayChecker())
     )
-    app.include_router(create_outline_router(outline_service or UnavailableOutlineService()))
+    app.include_router(
+        create_outline_router(outline_facade or UnavailableOutlineFacade())
+    )
     return app
 
 

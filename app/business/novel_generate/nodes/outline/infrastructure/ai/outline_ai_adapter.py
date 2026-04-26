@@ -1,19 +1,15 @@
-"""大纲节点的 AI port 适配器。
-
-本模块把业务层的大纲生成需求翻译为 AI gateway 的中性结构化请求，
-并把结构化响应映射回业务实体，避免业务核心依赖 provider 细节。
-"""
+"""大纲节点的 AI port 适配器。"""
 
 import logging
 from typing import Any
 
-from app.business.novel_generate.nodes.outline.entities import (
+from app.business.novel_generate.nodes.outline.application.ports import OutlineAiPort
+from app.business.novel_generate.nodes.outline.domain.models import (
     ChapterSummary,
     Seed,
     Skeleton,
     SkeletonVolume,
 )
-from app.business.novel_generate.nodes.outline.ports import OutlineAiPort
 from app.capabilities.ai_gateway import (
     AiGatewayError,
     AiGatewayFacade,
@@ -25,12 +21,9 @@ from app.capabilities.ai_gateway import (
     StructuredOutputConstraint,
 )
 
-
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
-
-# AI gateway 结构化输出契约，只约束生成响应形状，不替代业务实体校验。
 SKELETON_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {
@@ -54,7 +47,6 @@ SKELETON_SCHEMA: dict[str, Any] = {
     "additionalProperties": False,
 }
 
-# 章节展开响应只保留后续编辑需要的章节序号、标题和摘要。
 CHAPTER_EXPANSION_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {
@@ -108,7 +100,9 @@ class OutlineAiAdapter(OutlineAiPort):
                             role=MessageRole.SYSTEM,
                             content="你是小说大纲策划助手，只输出符合 JSON Schema 的骨架。",
                         ),
-                        AiGatewayMessage(role=MessageRole.USER, content=self._seed_prompt(seed)),
+                        AiGatewayMessage(
+                            role=MessageRole.USER, content=self._seed_prompt(seed)
+                        ),
                     ],
                 )
             )
@@ -220,7 +214,9 @@ class OutlineAiAdapter(OutlineAiPort):
             f"补充说明：{seed.additional_notes or '无'}"
         )
 
-    def _volume_prompt(self, seed: Seed, skeleton: Skeleton, volume: SkeletonVolume) -> str:
+    def _volume_prompt(
+        self, seed: Seed, skeleton: Skeleton, volume: SkeletonVolume
+    ) -> str:
         """构造卷展开提示词；仅传给 AI gateway，不进入日志上下文。"""
         volume_lines = "\n".join(
             f"{item.sequence}. {item.title}：{item.turning_point}"

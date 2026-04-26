@@ -1,7 +1,13 @@
 import unittest
 
-from app.business.novel_generate.nodes.outline.entities import Seed, Skeleton, SkeletonVolume
-from app.business.novel_generate.nodes.outline.infrastructure.ai_adapter import OutlineAiAdapter
+from app.business.novel_generate.nodes.outline.domain.models import (
+    Seed,
+    Skeleton,
+    SkeletonVolume,
+)
+from app.business.novel_generate.nodes.outline.infrastructure.ai.outline_ai_adapter import (
+    OutlineAiAdapter,
+)
 from app.capabilities.ai_gateway import AiGatewayResponse, OutputMode, TokenUsage
 
 
@@ -76,8 +82,12 @@ class OutlineAiAdapterTest(unittest.TestCase):
         chapters = adapter.expand_volume(seed, skeleton, volume)
 
         self.assertEqual(OutputMode.STRUCTURED, gateway.requests[0].output_mode)
-        self.assertEqual("outline-chapter-expansion", gateway.requests[0].capability_profile)
-        self.assertEqual("outline_chapter_expansion", gateway.requests[0].structured_output.name)
+        self.assertEqual(
+            "outline-chapter-expansion", gateway.requests[0].capability_profile
+        )
+        self.assertEqual(
+            "outline_chapter_expansion", gateway.requests[0].structured_output.name
+        )
         self.assertEqual(["第一章", "第二章"], [chapter.title for chapter in chapters])
         self.assertEqual(volume.id, chapters[0].volume_id)
 

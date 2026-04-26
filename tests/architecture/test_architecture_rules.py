@@ -82,6 +82,53 @@ class ArchitectureRulesTest(unittest.TestCase):
             for term in business_terms:
                 self.assertNotIn(term, lowered, f"{path} contains business term {term}")
 
+    def test_outline_domain_does_not_depend_on_outer_layers(self) -> None:
+        forbidden_prefixes = (
+            "app.business.novel_generate.nodes.outline.application",
+            "app.business.novel_generate.nodes.outline.infrastructure",
+            "app.capabilities",
+            "app.interfaces",
+            "sqlalchemy",
+            "fastapi",
+            "httpx",
+            "requests",
+        )
+        for path in APP_ROOT.glob(
+            "business/novel_generate/nodes/outline/domain/**/*.py"
+        ):
+            for prefix in forbidden_prefixes:
+                self._assert_no_prefix(path, prefix)
+
+    def test_complex_outline_node_does_not_keep_flat_service_module(self) -> None:
+        service_path = (
+            APP_ROOT
+            / "business"
+            / "novel_generate"
+            / "nodes"
+            / "outline"
+            / "service.py"
+        )
+
+        self.assertFalse(
+            service_path.exists(),
+            "complex outline node must use facade/use cases, not service.py",
+        )
+
+    def test_complex_outline_node_exposes_workflow_adapter(self) -> None:
+        node_path = (
+            APP_ROOT
+            / "business"
+            / "novel_generate"
+            / "nodes"
+            / "outline"
+            / "node.py"
+        )
+
+        self.assertTrue(
+            node_path.exists(),
+            "complex outline node must expose node.py as workflow adapter",
+        )
+
     def test_shared_does_not_depend_on_business_modules(self) -> None:
         for path in APP_ROOT.glob("shared/**/*.py"):
             self._assert_no_prefix(path, "app.business")

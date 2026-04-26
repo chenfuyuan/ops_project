@@ -20,7 +20,9 @@ class DockerComposePostgresTest(unittest.TestCase):
             "postgresql+psycopg://person_up:person_up@postgres:5432/person_up"
         )
 
-        self.assertGreaterEqual(compose.count(f"PERSON_UP_DATABASE_URL: {database_url}"), 2)
+        self.assertGreaterEqual(
+            compose.count(f"PERSON_UP_DATABASE_URL: {database_url}"), 2
+        )
         self.assertIn("postgres:\n        condition: service_healthy", compose)
 
 

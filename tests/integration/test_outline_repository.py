@@ -3,7 +3,7 @@ import unittest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from app.business.novel_generate.nodes.outline.entities import (
+from app.business.novel_generate.nodes.outline.domain.models import (
     ChapterSummary,
     Seed,
     Skeleton,
@@ -12,7 +12,7 @@ from app.business.novel_generate.nodes.outline.entities import (
     SkeletonStatus,
     SkeletonVolume,
 )
-from app.business.novel_generate.nodes.outline.infrastructure.repository import (
+from app.business.novel_generate.nodes.outline.infrastructure.persistence.outline_repository import (
     Base,
     OutlineRepositoryImpl,
 )
@@ -58,7 +58,9 @@ class OutlineRepositoryImplTest(unittest.TestCase):
 
         loaded_seed = self.repository.get_seed(seed.id)
         loaded_skeleton = self.repository.get_skeleton_by_seed(seed.id)
-        loaded_chapters = self.repository.get_chapters_by_volume(saved_skeleton.volumes[0].id)
+        loaded_chapters = self.repository.get_chapters_by_volume(
+            saved_skeleton.volumes[0].id
+        )
 
         self.assertEqual("群星回声", loaded_seed.title)
         self.assertEqual(SkeletonStatus.DRAFT, loaded_skeleton.status)
@@ -100,7 +102,9 @@ class OutlineRepositoryImplTest(unittest.TestCase):
         self.assertEqual(skeleton.id, loaded.skeleton_id)
         self.assertEqual(OutlineStatus.IN_PROGRESS, loaded.status)
 
-    def test_saving_new_skeleton_for_seed_replaces_old_volumes_and_chapters(self) -> None:
+    def test_saving_new_skeleton_for_seed_replaces_old_volumes_and_chapters(
+        self,
+    ) -> None:
         seed = self.repository.save_seed(
             Seed(
                 title="群星回声",

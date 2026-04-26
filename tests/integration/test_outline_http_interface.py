@@ -3,7 +3,7 @@ from uuid import uuid4
 
 from fastapi.testclient import TestClient
 
-from app.business.novel_generate.nodes.outline.entities import (
+from app.business.novel_generate.nodes.outline.domain.models import (
     ChapterSummary,
     Outline,
     OutlineStatus,
@@ -16,7 +16,7 @@ from app.capabilities.ai_gateway import ProviderTimeoutError
 from app.interfaces.http.app import build_http_app
 
 
-class FakeOutlineService:
+class FakeOutlineFacade:
     def __init__(self) -> None:
         self.seed = Seed(
             title="群星回声",
@@ -85,8 +85,8 @@ class FakeOutlineService:
 
 class OutlineHttpInterfaceTest(unittest.TestCase):
     def setUp(self) -> None:
-        self.service = FakeOutlineService()
-        self.client = TestClient(build_http_app(outline_service=self.service))
+        self.facade = FakeOutlineFacade()
+        self.client = TestClient(build_http_app(outline_facade=self.facade))
 
     def test_create_seed_endpoint_maps_request_to_service(self) -> None:
         response = self.client.post(
@@ -101,8 +101,8 @@ class OutlineHttpInterfaceTest(unittest.TestCase):
         )
 
         self.assertEqual(200, response.status_code)
-        self.assertEqual(str(self.service.seed.id), response.json()["id"])
-        self.assertEqual("群星回声", self.service.received_seed_command.title)
+        self.assertEqual(str(self.facade.seed.id), response.json()["id"])
+        self.assertEqual("群星回声", self.facade.received_seed_command.title)
 
     def test_missing_seed_field_returns_422(self) -> None:
         response = self.client.post(
@@ -113,15 +113,15 @@ class OutlineHttpInterfaceTest(unittest.TestCase):
         self.assertEqual(422, response.status_code)
 
     def test_outline_endpoints_map_service_results(self) -> None:
-        seed_id = self.service.seed.id
-        skeleton_id = self.service.skeleton.id
-        volume_id = self.service.volume.id
-        chapter_id = self.service.chapter.id
+        seed_id = self.facade.seed.id
+        skeleton_id = self.facade.skeleton.id
+        volume_id = self.facade.volume.id
+        chapter_id = self.facade.chapter.id
 
-        self.assertEqual(200, self.client.get(f"/api/outlines/seeds/{seed_id}").status_code)
-        skeleton_response = self.client.post(
-            f"/api/outlines/seeds/{seed_id}/skeleton"
+        self.assertEqual(
+            200, self.client.get(f"/api/outlines/seeds/{seed_id}").status_code
         )
+        skeleton_response = self.client.post(f"/api/outlines/seeds/{seed_id}/skeleton")
         self.assertEqual(200, skeleton_response.status_code)
         self.assertEqual("draft", skeleton_response.json()["status"])
         self.assertEqual(
@@ -148,12 +148,12 @@ class OutlineHttpInterfaceTest(unittest.TestCase):
         outline_response = self.client.get(f"/api/outlines/seeds/{seed_id}/outline")
         self.assertEqual("complete", outline_response.json()["status"])
 
-    def test_service_value_error_returns_404(self) -> None:
-        class MissingService(FakeOutlineService):
+    def test_facade_value_error_returns_404(self) -> None:
+        class MissingFacade(FakeOutlineFacade):
             def get_seed(self, seed_id):
                 raise ValueError("种子未找到")
 
-        client = TestClient(build_http_app(outline_service=MissingService()))
+        client = TestClient(build_http_app(outline_facade=MissingFacade()))
 
         response = client.get(f"/api/outlines/seeds/{uuid4()}")
 
@@ -161,11 +161,11 @@ class OutlineHttpInterfaceTest(unittest.TestCase):
         self.assertEqual({"detail": "种子未找到"}, response.json())
 
     def test_provider_timeout_returns_503(self) -> None:
-        class TimeoutService(FakeOutlineService):
+        class TimeoutFacade(FakeOutlineFacade):
             def generate_skeleton(self, seed_id):
                 raise ProviderTimeoutError("AI provider HTTP call timed out")
 
-        client = TestClient(build_http_app(outline_service=TimeoutService()))
+        client = TestClient(build_http_app(outline_facade=TimeoutFacade()))
 
         response = client.post(f"/api/outlines/seeds/{uuid4()}/skeleton")
 

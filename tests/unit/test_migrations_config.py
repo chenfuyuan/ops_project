@@ -25,10 +25,7 @@ class MigrationsConfigTest(unittest.TestCase):
 
     def test_outline_migration_exists(self) -> None:
         migration = (
-            ROOT
-            / "alembic"
-            / "versions"
-            / "20260426_0001_create_outline_tables.py"
+            ROOT / "alembic" / "versions" / "20260426_0001_create_outline_tables.py"
         )
 
         self.assertTrue(migration.exists())

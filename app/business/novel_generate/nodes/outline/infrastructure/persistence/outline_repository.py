@@ -1,17 +1,19 @@
-"""大纲节点 SQLAlchemy repository 实现。
-
-本模块负责业务实体与数据库 record 的双向转换，并把替换、删除、
-过期标记等持久化副作用限制在 repository 边界内。
-"""
+"""大纲节点 SQLAlchemy repository 实现。"""
 
 import logging
 from datetime import datetime
 from uuid import UUID
 
 from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, select
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship, sessionmaker
+from sqlalchemy.orm import (
+    DeclarativeBase,
+    Mapped,
+    mapped_column,
+    relationship,
+    sessionmaker,
+)
 
-from app.business.novel_generate.nodes.outline.entities import (
+from app.business.novel_generate.nodes.outline.domain.models import (
     ChapterSummary,
     Outline,
     OutlineStatus,
@@ -20,8 +22,9 @@ from app.business.novel_generate.nodes.outline.entities import (
     SkeletonStatus,
     SkeletonVolume,
 )
-from app.business.novel_generate.nodes.outline.ports import OutlineRepository
-
+from app.business.novel_generate.nodes.outline.domain.repositories import (
+    OutlineRepository,
+)
 
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
@@ -43,8 +46,12 @@ class OutlineSeedRecord(Base):
     core_conflict: Mapped[str] = mapped_column(Text, nullable=False)
     story_direction: Mapped[str] = mapped_column(Text, nullable=False)
     additional_notes: Mapped[str | None] = mapped_column(Text)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
 
 
 class OutlineSkeletonRecord(Base):
@@ -57,8 +64,12 @@ class OutlineSkeletonRecord(Base):
         String(36), ForeignKey("outline_seeds.id"), nullable=False, unique=True
     )
     status: Mapped[str] = mapped_column(String(20), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     confirmed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     volumes: Mapped[list["OutlineSkeletonVolumeRecord"]] = relationship(
         cascade="all, delete-orphan",
@@ -73,13 +84,19 @@ class OutlineSkeletonVolumeRecord(Base):
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True)
     skeleton_id: Mapped[str] = mapped_column(
-        String(36), ForeignKey("outline_skeletons.id", ondelete="CASCADE"), nullable=False
+        String(36),
+        ForeignKey("outline_skeletons.id", ondelete="CASCADE"),
+        nullable=False,
     )
     sequence: Mapped[int] = mapped_column(Integer, nullable=False)
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     turning_point: Mapped[str] = mapped_column(Text, nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
     chapters: Mapped[list["OutlineChapterSummaryRecord"]] = relationship(
         cascade="all, delete-orphan",
         order_by="OutlineChapterSummaryRecord.sequence",
@@ -101,8 +118,12 @@ class OutlineChapterSummaryRecord(Base):
     title: Mapped[str] = mapped_column(String(200), nullable=False)
     summary: Mapped[str] = mapped_column(Text, nullable=False)
     is_stale: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
 
 
 class OutlineRecord(Base):
@@ -118,8 +139,12 @@ class OutlineRecord(Base):
         String(36), ForeignKey("outline_skeletons.id"), nullable=False
     )
     status: Mapped[str] = mapped_column(String(20), nullable=False)
-    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
-    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), nullable=False
+    )
 
 
 class OutlineRepositoryImpl(OutlineRepository):
@@ -322,7 +347,9 @@ class OutlineRepositoryImpl(OutlineRepository):
             chapters_by_volume = {
                 UUID(volume.id): [
                     self._chapter_entity(chapter)
-                    for chapter in sorted(volume.chapters, key=lambda item: item.sequence)
+                    for chapter in sorted(
+                        volume.chapters, key=lambda item: item.sequence
+                    )
                 ]
                 for volume in skeleton.volumes
             }
@@ -345,7 +372,6 @@ class OutlineRepositoryImpl(OutlineRepository):
         for record in records:
             session.delete(record)
 
-    # 以下 mapper 只做数据库形状和业务实体之间的转换，不承载业务决策。
     def _seed_record(self, seed: Seed) -> OutlineSeedRecord:
         return OutlineSeedRecord(
             id=str(seed.id),

@@ -53,7 +53,11 @@ class AiGatewayConfigTest(unittest.TestCase):
 
     def test_example_config_contains_outline_generation_profiles(self) -> None:
         data = json.loads(
-            (Path(__file__).resolve().parents[2] / "config" / "ai_gateway.example.json").read_text()
+            (
+                Path(__file__).resolve().parents[2]
+                / "config"
+                / "ai_gateway.example.json"
+            ).read_text()
         )
         profile_names = {profile["name"] for profile in data["profiles"]}
 

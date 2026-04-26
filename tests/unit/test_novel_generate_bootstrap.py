@@ -4,9 +4,13 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 from app.bootstrap.novel_generate import create_outline_service
-from app.business.novel_generate.nodes.outline.infrastructure.ai_adapter import OutlineAiAdapter
-from app.business.novel_generate.nodes.outline.infrastructure.repository import OutlineRepositoryImpl
-from app.business.novel_generate.nodes.outline.service import OutlineNodeService
+from app.business.novel_generate.nodes.outline.infrastructure.ai.outline_ai_adapter import (
+    OutlineAiAdapter,
+)
+from app.business.novel_generate.nodes.outline.facade import OutlineFacade
+from app.business.novel_generate.nodes.outline.infrastructure.persistence.outline_repository import (
+    OutlineRepositoryImpl,
+)
 
 
 class NovelGenerateBootstrapTest(unittest.TestCase):
@@ -14,9 +18,9 @@ class NovelGenerateBootstrapTest(unittest.TestCase):
         engine = create_engine("sqlite+pysqlite:///:memory:")
         service = create_outline_service(object(), sessionmaker(bind=engine))
 
-        self.assertIsInstance(service, OutlineNodeService)
+        self.assertIsInstance(service, OutlineFacade)
         self.assertIsInstance(service._repository, OutlineRepositoryImpl)
-        self.assertIsInstance(service._ai_port, OutlineAiAdapter)
+        self.assertIsInstance(service._generate_skeleton._ai_port, OutlineAiAdapter)
 
 
 if __name__ == "__main__":

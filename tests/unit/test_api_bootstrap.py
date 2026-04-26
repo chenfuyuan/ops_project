@@ -36,7 +36,9 @@ class ApiBootstrapTest(unittest.TestCase):
             },
         )
         self.assertEqual(503, response.status_code)
-        self.assertEqual({"detail": "outline service is not configured."}, response.json())
+        self.assertEqual(
+            {"detail": "outline facade is not configured."}, response.json()
+        )
 
 
 if __name__ == "__main__":

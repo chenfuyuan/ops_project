@@ -1,7 +1,7 @@
 """大纲节点 HTTP 接口。
 
 本模块只负责 FastAPI 请求/响应模型映射和边界错误转换，
-业务规则由注入的 outline service 处理。
+业务规则由注入的 outline facade 处理。
 """
 
 import logging
@@ -14,7 +14,7 @@ from pydantic import BaseModel
 
 from app.capabilities.ai_gateway import AiGatewayError
 
-from app.business.novel_generate.nodes.outline.dto import (
+from app.business.novel_generate.nodes.outline.application.dto import (
     ChapterSummaryResponse,
     CreateSeedCommand,
     OutlineResponse,
@@ -24,7 +24,7 @@ from app.business.novel_generate.nodes.outline.dto import (
     UpdateChapterCommand,
     UpdateVolumeCommand,
 )
-from app.business.novel_generate.nodes.outline.entities import (
+from app.business.novel_generate.nodes.outline.domain.models import (
     ChapterSummary,
     Outline,
     Seed,
@@ -51,8 +51,8 @@ class UpdateChapterBody(BaseModel):
     summary: str | None = None
 
 
-class OutlineHttpService(Protocol):
-    """HTTP 层调用的大纲业务入口，具体依赖由 bootstrap 注入。"""
+class OutlineHttpFacade(Protocol):
+    """HTTP 层调用的大纲 facade 入口，具体依赖由 bootstrap 注入。"""
 
     def create_seed(self, command: CreateSeedCommand) -> Seed: ...
 
@@ -66,54 +66,56 @@ class OutlineHttpService(Protocol):
 
     def confirm_skeleton(self, skeleton_id: UUID) -> Skeleton: ...
 
-    def expand_volume(self, skeleton_id: UUID, volume_id: UUID) -> list[ChapterSummary]: ...
+    def expand_volume(
+        self, skeleton_id: UUID, volume_id: UUID
+    ) -> list[ChapterSummary]: ...
 
     def update_chapter(self, command: UpdateChapterCommand) -> ChapterSummary: ...
 
     def get_outline(self, seed_id: UUID) -> Outline: ...
 
 
-class UnavailableOutlineService:
-    """未装配 outline service 时的安全占位实现，让路由稳定返回 503。"""
+class UnavailableOutlineFacade:
+    """未装配 outline facade 时的安全占位实现，让路由稳定返回 503。"""
 
     def create_seed(self, command: CreateSeedCommand) -> Seed:
         """创建种子不可用时抛出稳定运行时错误。"""
-        raise RuntimeError("outline service is not configured.")
+        raise RuntimeError("outline facade is not configured.")
 
     def get_seed(self, seed_id: UUID) -> Seed:
         """读取种子不可用时抛出稳定运行时错误。"""
-        raise RuntimeError("outline service is not configured.")
+        raise RuntimeError("outline facade is not configured.")
 
     def generate_skeleton(self, seed_id: UUID) -> Skeleton:
         """生成骨架不可用时抛出稳定运行时错误。"""
-        raise RuntimeError("outline service is not configured.")
+        raise RuntimeError("outline facade is not configured.")
 
     def get_skeleton(self, skeleton_id: UUID) -> Skeleton:
         """读取骨架不可用时抛出稳定运行时错误。"""
-        raise RuntimeError("outline service is not configured.")
+        raise RuntimeError("outline facade is not configured.")
 
     def update_volume(self, command: UpdateVolumeCommand) -> SkeletonVolume:
         """编辑骨架卷不可用时抛出稳定运行时错误。"""
-        raise RuntimeError("outline service is not configured.")
+        raise RuntimeError("outline facade is not configured.")
 
     def confirm_skeleton(self, skeleton_id: UUID) -> Skeleton:
         """确认骨架不可用时抛出稳定运行时错误。"""
-        raise RuntimeError("outline service is not configured.")
+        raise RuntimeError("outline facade is not configured.")
 
     def expand_volume(self, skeleton_id: UUID, volume_id: UUID) -> list[ChapterSummary]:
         """展开章节不可用时抛出稳定运行时错误。"""
-        raise RuntimeError("outline service is not configured.")
+        raise RuntimeError("outline facade is not configured.")
 
     def update_chapter(self, command: UpdateChapterCommand) -> ChapterSummary:
         """编辑章节摘要不可用时抛出稳定运行时错误。"""
-        raise RuntimeError("outline service is not configured.")
+        raise RuntimeError("outline facade is not configured.")
 
     def get_outline(self, seed_id: UUID) -> Outline:
         """读取完整大纲不可用时抛出稳定运行时错误。"""
-        raise RuntimeError("outline service is not configured.")
+        raise RuntimeError("outline facade is not configured.")
 
 
-def create_outline_router(service: OutlineHttpService) -> APIRouter:
+def create_outline_router(facade: OutlineHttpFacade) -> APIRouter:
     """创建大纲 HTTP router，依赖由 bootstrap 注入，路由层只做协议适配。"""
     router = APIRouter(prefix="/api/outlines")
 
@@ -122,7 +124,7 @@ def create_outline_router(service: OutlineHttpService) -> APIRouter:
         route = "create_seed"
         _log_request_received(route)
         try:
-            response = _seed_response(service.create_seed(command))
+            response = _seed_response(facade.create_seed(command))
             _log_request_completed(route, 200, seed_id=response.id)
             return response
         except RuntimeError as exc:
@@ -136,7 +138,7 @@ def create_outline_router(service: OutlineHttpService) -> APIRouter:
     def get_seed(seed_id: UUID) -> SeedResponse:
         return _call_or_http_error(
             "get_seed",
-            lambda: _seed_response(service.get_seed(seed_id)),
+            lambda: _seed_response(facade.get_seed(seed_id)),
             seed_id=seed_id,
         )
 
@@ -144,7 +146,7 @@ def create_outline_router(service: OutlineHttpService) -> APIRouter:
     def generate_skeleton(seed_id: UUID) -> SkeletonResponse:
         return _call_or_http_error(
             "generate_skeleton",
-            lambda: _skeleton_response(service.generate_skeleton(seed_id)),
+            lambda: _skeleton_response(facade.generate_skeleton(seed_id)),
             seed_id=seed_id,
         )
 
@@ -152,18 +154,20 @@ def create_outline_router(service: OutlineHttpService) -> APIRouter:
     def get_skeleton(skeleton_id: UUID) -> SkeletonResponse:
         return _call_or_http_error(
             "get_skeleton",
-            lambda: _skeleton_response(service.get_skeleton(skeleton_id)),
+            lambda: _skeleton_response(facade.get_skeleton(skeleton_id)),
             skeleton_id=skeleton_id,
         )
 
     @router.patch(
         "/skeletons/volumes/{volume_id}", response_model=SkeletonVolumeResponse
     )
-    def update_volume(volume_id: UUID, body: UpdateVolumeBody) -> SkeletonVolumeResponse:
+    def update_volume(
+        volume_id: UUID, body: UpdateVolumeBody
+    ) -> SkeletonVolumeResponse:
         return _call_or_http_error(
             "update_volume",
             lambda: _volume_response(
-                service.update_volume(
+                facade.update_volume(
                     UpdateVolumeCommand(
                         volume_id=volume_id,
                         title=body.title,
@@ -178,7 +182,7 @@ def create_outline_router(service: OutlineHttpService) -> APIRouter:
     def confirm_skeleton(skeleton_id: UUID) -> SkeletonResponse:
         return _call_or_http_error(
             "confirm_skeleton",
-            lambda: _skeleton_response(service.confirm_skeleton(skeleton_id)),
+            lambda: _skeleton_response(facade.confirm_skeleton(skeleton_id)),
             skeleton_id=skeleton_id,
         )
 
@@ -186,12 +190,14 @@ def create_outline_router(service: OutlineHttpService) -> APIRouter:
         "/skeletons/{skeleton_id}/expand/{volume_id}",
         response_model=list[ChapterSummaryResponse],
     )
-    def expand_volume(skeleton_id: UUID, volume_id: UUID) -> list[ChapterSummaryResponse]:
+    def expand_volume(
+        skeleton_id: UUID, volume_id: UUID
+    ) -> list[ChapterSummaryResponse]:
         return _call_or_http_error(
             "expand_volume",
             lambda: [
                 _chapter_response(chapter)
-                for chapter in service.expand_volume(skeleton_id, volume_id)
+                for chapter in facade.expand_volume(skeleton_id, volume_id)
             ],
             skeleton_id=skeleton_id,
             volume_id=volume_id,
@@ -204,7 +210,7 @@ def create_outline_router(service: OutlineHttpService) -> APIRouter:
         return _call_or_http_error(
             "update_chapter",
             lambda: _chapter_response(
-                service.update_chapter(
+                facade.update_chapter(
                     UpdateChapterCommand(
                         chapter_id=chapter_id,
                         title=body.title,
@@ -219,7 +225,7 @@ def create_outline_router(service: OutlineHttpService) -> APIRouter:
     def get_outline(seed_id: UUID) -> OutlineResponse:
         return _call_or_http_error(
             "get_outline",
-            lambda: _outline_response(service.get_outline(seed_id)),
+            lambda: _outline_response(facade.get_outline(seed_id)),
             seed_id=seed_id,
         )
 
@@ -266,7 +272,9 @@ def _log_request_completed(route: str, status_code: int, **context) -> None:
     )
 
 
-def _log_request_failed(route: str, status_code: int, exc: Exception, **context) -> None:
+def _log_request_failed(
+    route: str, status_code: int, exc: Exception, **context
+) -> None:
     event = (
         "outline_http_service_unavailable"
         if status_code == 503 and isinstance(exc, RuntimeError)
