@@ -4,13 +4,31 @@
 
 ## 启动本地 API
 
+仅验证基础健康检查时可以直接启动：
+
 ```bash
 uv run uvicorn app.api:app --host 127.0.0.1 --port 8000
 ```
 
+验证大纲生成接口时，应使用 Docker Compose 中的 PostgreSQL，并先执行迁移：
+
+```bash
+docker compose up -d --build postgres redis
+docker compose run --rm api /app/.venv/bin/alembic upgrade head
+docker compose up -d api worker
+```
+
+然后访问 `http://127.0.0.1:8000`。
+
 ## 验证应用健康检查
 
 运行 `health.http`，预期 `/health` 返回 `200` 和 `{"status":"ok"}`。
+
+## 验证大纲生成
+
+运行 `outline.http`，按顺序执行创建种子、生成骨架、确认骨架、展开卷、编辑章节和获取完整大纲请求。
+
+其中创建和获取种子只依赖 PostgreSQL；生成骨架和展开卷会调用 AI 网关，因此需要先完成下面的 AI 网关配置。
 
 ## 验证 AI 网关
 

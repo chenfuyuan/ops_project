@@ -1,0 +1,57 @@
+@baseUrl = http://127.0.0.1:8000
+@seedId = replace-with-seed-id
+@skeletonId = replace-with-skeleton-id
+@volumeId = replace-with-volume-id
+@chapterId = replace-with-chapter-id
+
+### Health check
+GET {{baseUrl}}/health
+
+### Create seed
+POST {{baseUrl}}/api/outlines/seeds
+Content-Type: application/json
+
+{
+  "title": "群星回声",
+  "genre": "科幻",
+  "protagonist": "失忆领航员",
+  "core_conflict": "殖民舰队争夺唯一航道",
+  "story_direction": "主角逐步发现自己曾关闭航道",
+  "additional_notes": "偏群像，带悬疑感"
+}
+
+### Get seed
+GET {{baseUrl}}/api/outlines/seeds/{{seedId}}
+
+### Generate skeleton through AI gateway
+POST {{baseUrl}}/api/outlines/seeds/{{seedId}}/skeleton
+
+### Get skeleton
+GET {{baseUrl}}/api/outlines/skeletons/{{skeletonId}}
+
+### Edit skeleton volume
+PATCH {{baseUrl}}/api/outlines/skeletons/volumes/{{volumeId}}
+Content-Type: application/json
+
+{
+  "title": "第一卷：失落航道",
+  "turning_point": "主角发现自己与航道封锁事件有关"
+}
+
+### Confirm skeleton
+POST {{baseUrl}}/api/outlines/skeletons/{{skeletonId}}/confirm
+
+### Expand volume through AI gateway
+POST {{baseUrl}}/api/outlines/skeletons/{{skeletonId}}/expand/{{volumeId}}
+
+### Edit chapter summary
+PATCH {{baseUrl}}/api/outlines/chapters/{{chapterId}}
+Content-Type: application/json
+
+{
+  "title": "第一章：冷冻舱苏醒",
+  "summary": "主角在异常警报中醒来，发现舰队已经偏离航道。"
+}
+
+### Get full outline
+GET {{baseUrl}}/api/outlines/seeds/{{seedId}}/outline

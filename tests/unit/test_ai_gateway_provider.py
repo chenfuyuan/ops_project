@@ -132,6 +132,28 @@ class AiGatewayProviderTest(unittest.TestCase):
                 api_key="secret-value",
             )
 
+    def test_openai_compatible_provider_retries_normalized_timeout(self) -> None:
+        transport = FakeHttpTransport(
+            [
+                ProviderTimeoutError("slow"),
+                {
+                    "choices": [{"message": {"content": "重试成功"}}],
+                    "usage": {"prompt_tokens": 1, "completion_tokens": 2},
+                },
+            ]
+        )
+        provider = OpenAICompatibleProvider(transport=transport)
+
+        response = provider.generate(
+            request=self._text_request(),
+            profile=self._profile(retry_attempts=1),
+            provider_config=self._provider_config(),
+            api_key="secret-value",
+        )
+
+        self.assertEqual("重试成功", response.content)
+        self.assertEqual(2, len(transport.requests))
+
     def test_openai_compatible_provider_converts_unexpected_response(self) -> None:
         provider = OpenAICompatibleProvider(
             transport=FakeHttpTransport([{"choices": []}])

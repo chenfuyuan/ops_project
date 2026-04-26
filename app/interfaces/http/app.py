@@ -1,3 +1,8 @@
+"""HTTP 应用聚合入口。
+
+本模块只注册各协议 router，并为未装配依赖提供安全占位实现。
+"""
+
 from fastapi import FastAPI
 
 from app.capabilities.ai_gateway import (
@@ -10,6 +15,11 @@ from app.interfaces.http.ai_gateway import (
     create_ai_gateway_router,
 )
 from app.interfaces.http.health import health_router
+from app.interfaces.http.outline import (
+    OutlineHttpService,
+    UnavailableOutlineService,
+    create_outline_router,
+)
 
 
 class UnavailableAiGatewayChecker:
@@ -30,12 +40,15 @@ class UnavailableAiGatewayChecker:
 def build_http_app(
     *,
     ai_gateway_checker: AiGatewayHttpGateway | None = None,
+    outline_service: OutlineHttpService | None = None,
 ) -> FastAPI:
+    """构建 FastAPI app；具体业务和 capability 实现由 bootstrap 注入。"""
     app = FastAPI(title="Person Up Ops Project")
     app.include_router(health_router)
     app.include_router(
         create_ai_gateway_router(ai_gateway_checker or UnavailableAiGatewayChecker())
     )
+    app.include_router(create_outline_router(outline_service or UnavailableOutlineService()))
     return app
 
 

@@ -6,15 +6,20 @@ services:
     command: ["/app/.venv/bin/uvicorn", "app.api:app", "--host", "0.0.0.0", "--port", "8000"]
     environment:
       PERSON_UP_APP_ENV: local
+      PERSON_UP_DATABASE_URL: postgresql+psycopg://person_up:person_up@postgres:5432/person_up
       PERSON_UP_REDIS_URL: redis://redis:6379/0
       PERSON_UP_CELERY_BROKER_URL: redis://redis:6379/0
       PERSON_UP_CELERY_RESULT_BACKEND: redis://redis:6379/1
       AI_GATEWAY_CONFIG_PATH: /app/config/ai_gateway.json
+      # Keep the real key in the shell environment; do not commit secrets into compose files.
       AI_GATEWAY_API_KEY: ${AI_GATEWAY_API_KEY}
     volumes:
       - ./config/ai_gateway.json:/app/config/ai_gateway.json:ro
     depends_on:
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
     ports:
       - "8000:8000"
     healthcheck:
@@ -31,13 +36,38 @@ services:
     command: ["uv", "run", "celery", "-A", "app.worker:app", "worker", "--loglevel=info"]
     environment:
       PERSON_UP_APP_ENV: local
+      PERSON_UP_DATABASE_URL: postgresql+psycopg://person_up:person_up@postgres:5432/person_up
       PERSON_UP_REDIS_URL: redis://redis:6379/0
       PERSON_UP_CELERY_BROKER_URL: redis://redis:6379/0
       PERSON_UP_CELERY_RESULT_BACKEND: redis://redis:6379/1
     depends_on:
-      - redis
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+
+  # Local Postgres backs the outline repository and Alembic migration checks.
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: person_up
+      POSTGRES_USER: person_up
+      POSTGRES_PASSWORD: person_up
+    ports:
+      - "5432:5432"
+    volumes:
+      - person_up_postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U person_up -d person_up"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
 
   redis:
     image: redis:7-alpine
     ports:
       - "6379:6379"
+
+volumes:
+  person_up_postgres_data:

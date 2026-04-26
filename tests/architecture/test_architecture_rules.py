@@ -14,6 +14,12 @@ class ArchitectureRulesTest(unittest.TestCase):
         for path in APP_ROOT.glob("business/**/workflow/*.py"):
             self._assert_forbidden_imports(path, forbidden)
 
+    def test_business_core_does_not_depend_on_capabilities(self) -> None:
+        for path in APP_ROOT.glob("business/**/*.py"):
+            if "/infrastructure/" in path.as_posix():
+                continue
+            self._assert_no_prefix(path, "app.capabilities")
+
     def test_interfaces_do_not_depend_on_business_infrastructure(self) -> None:
         for path in APP_ROOT.glob("interfaces/**/*.py"):
             self._assert_not_importing(path, "app.business", ".infrastructure")

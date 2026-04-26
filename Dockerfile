@@ -13,7 +13,9 @@ RUN uv sync --frozen --no-dev --no-install-project
 
 COPY app ./app
 COPY tests ./tests
+# Runtime image includes migration files so containers can run Alembic against the configured database.
 COPY alembic ./alembic
+COPY alembic.ini ./alembic.ini
 COPY CLAUDE.md ./CLAUDE.md
 
 RUN uv sync --frozen --no-dev

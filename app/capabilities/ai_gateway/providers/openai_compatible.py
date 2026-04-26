@@ -1,4 +1,11 @@
+"""OpenAI-compatible AI provider adapter.
+
+该模块只处理中性 AI gateway contract 与 OpenAI-compatible HTTP 协议的映射，
+日志只能记录 provider、profile、模型、尝试次数和 token 计数等安全摘要。
+"""
+
 import json
+import logging
 from typing import Any, Protocol
 
 from app.capabilities.ai_gateway.config.models import (
@@ -16,6 +23,10 @@ from app.capabilities.ai_gateway.errors import (
 )
 
 
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
+
+
 class JsonHttpTransport(Protocol):
     """OpenAI-compatible provider 使用的最小 JSON HTTP transport。"""
 
@@ -29,6 +40,7 @@ class OpenAICompatibleProvider:
     """通过 OpenAI-compatible HTTP 协议访问外部模型 provider。"""
 
     def __init__(self, *, transport: JsonHttpTransport) -> None:
+        """接收注入的 JSON transport，便于测试和运行时选择 HTTP 实现。"""
         self._transport = transport
 
     def generate(
@@ -39,9 +51,22 @@ class OpenAICompatibleProvider:
         provider_config: AiGatewayProviderConfig,
         api_key: str,
     ) -> AiGatewayResponse:
+        """调用 OpenAI-compatible chat completions，并按 profile 配置执行重试。"""
         attempts = profile.retry_attempts + 1
         last_error: ProviderCallError | None = None
         for attempt in range(attempts):
+            attempt_number = attempt + 1
+            logger.info(
+                "ai_gateway_provider_request_started",
+                extra={
+                    "provider": provider_config.name,
+                    "profile": profile.name,
+                    "model": profile.model,
+                    "output_mode": request.output_mode.value,
+                    "attempt": attempt_number,
+                    "max_attempts": attempts,
+                },
+            )
             try:
                 raw_response = self._transport.post_json(
                     url=self._chat_completions_url(provider_config.base_url),
@@ -52,23 +77,80 @@ class OpenAICompatibleProvider:
                     payload=self._payload(request, profile),
                     timeout=profile.timeout_seconds,
                 )
-                return self._response(raw_response, request.output_mode)
+                response = self._response(raw_response, request.output_mode)
+                logger.info(
+                    "ai_gateway_provider_request_completed",
+                    extra={
+                        "provider": provider_config.name,
+                        "profile": profile.name,
+                        "model": profile.model,
+                        "output_mode": request.output_mode.value,
+                        "input_tokens": response.usage.input_tokens,
+                        "output_tokens": response.usage.output_tokens,
+                    },
+                )
+                return response
+            except ProviderTimeoutError as exc:
+                last_error = exc
+                logger.warning(
+                    "ai_gateway_provider_request_timeout",
+                    extra={
+                        "provider": provider_config.name,
+                        "profile": profile.name,
+                        "model": profile.model,
+                        "attempt": attempt_number,
+                        "max_attempts": attempts,
+                    },
+                )
             except TimeoutError:
                 last_error = ProviderTimeoutError(
                     "AI provider call timed out",
                     safe_context={
                         "provider": provider_config.name,
-                        "attempt": attempt + 1,
+                        "attempt": attempt_number,
                     },
                 )
-            except ProviderCallError:
+                logger.warning(
+                    "ai_gateway_provider_request_timeout",
+                    extra={
+                        "provider": provider_config.name,
+                        "profile": profile.name,
+                        "model": profile.model,
+                        "attempt": attempt_number,
+                        "max_attempts": attempts,
+                    },
+                )
+            except ProviderCallError as exc:
+                logger.warning(
+                    "ai_gateway_provider_request_failed",
+                    extra={
+                        "provider": provider_config.name,
+                        "profile": profile.name,
+                        "model": profile.model,
+                        "attempt": attempt_number,
+                        "max_attempts": attempts,
+                        "error_type": type(exc).__name__,
+                    },
+                )
                 raise
-            except Exception:
+            except Exception as exc:
+                original_error_type = type(exc).__name__
                 last_error = ProviderCallError(
                     "AI provider call failed",
                     safe_context={
                         "provider": provider_config.name,
-                        "attempt": attempt + 1,
+                        "attempt": attempt_number,
+                    },
+                )
+                logger.warning(
+                    "ai_gateway_provider_request_failed",
+                    extra={
+                        "provider": provider_config.name,
+                        "profile": profile.name,
+                        "model": profile.model,
+                        "attempt": attempt_number,
+                        "max_attempts": attempts,
+                        "error_type": original_error_type,
                     },
                 )
         if last_error is not None:
@@ -78,6 +160,7 @@ class OpenAICompatibleProvider:
     def _payload(
         self, request: AiGatewayRequest, profile: AiGatewayProfileConfig
     ) -> dict[str, Any]:
+        """把中性请求转换为 provider payload；messages 可能包含 prompt，禁止写日志。"""
         payload: dict[str, Any] = {
             "model": profile.model,
             "messages": [
@@ -86,6 +169,7 @@ class OpenAICompatibleProvider:
             ],
         }
         if request.output_mode is OutputMode.STRUCTURED:
+            # OpenAI-compatible 结构化输出通过 response_format 传递 JSON Schema。
             structured_output = request.structured_output
             if structured_output is None:
                 raise StructuredOutputError("Structured output constraint is required")
@@ -101,6 +185,7 @@ class OpenAICompatibleProvider:
     def _response(
         self, raw_response: dict[str, Any], output_mode: OutputMode
     ) -> AiGatewayResponse:
+        """把 provider JSON 响应映射为稳定的 AI gateway response。"""
         try:
             content = raw_response["choices"][0]["message"]["content"]
             usage = raw_response.get("usage", {})
@@ -109,6 +194,10 @@ class OpenAICompatibleProvider:
                 output_tokens=usage.get("completion_tokens", 0),
             )
         except (KeyError, IndexError, TypeError) as exc:
+            logger.error(
+                "ai_gateway_provider_response_mapping_failed",
+                extra={"error_type": type(exc).__name__},
+            )
             raise ProviderResponseError(
                 "AI provider response could not be mapped"
             ) from exc
@@ -121,6 +210,10 @@ class OpenAICompatibleProvider:
             try:
                 structured_content = json.loads(content)
             except json.JSONDecodeError as exc:
+                logger.error(
+                    "ai_gateway_provider_response_mapping_failed",
+                    extra={"error_type": type(exc).__name__},
+                )
                 raise StructuredOutputError(
                     "AI provider response is not valid structured output"
                 ) from exc
@@ -139,4 +232,5 @@ class OpenAICompatibleProvider:
         )
 
     def _chat_completions_url(self, base_url: str) -> str:
+        """拼接 chat completions endpoint，不在日志中输出完整 base URL。"""
         return f"{base_url.rstrip('/')}/chat/completions"
