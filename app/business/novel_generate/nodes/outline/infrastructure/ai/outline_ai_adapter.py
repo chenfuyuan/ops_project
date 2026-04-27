@@ -1,4 +1,9 @@
-"""大纲节点的 AI port 适配器。"""
+"""大纲节点的 AI port 适配器。
+
+本模块把 outline 应用层的业务端口转换为中性的 AI gateway 调用：选择 capability
+profile、声明结构化输出 schema、组装 prompt，并把结构化响应映射回领域模型。
+日志只能记录 ID、profile、schema 和数量摘要，不能记录 prompt 或模型输出正文。
+"""
 
 import logging
 from typing import Any
@@ -24,6 +29,7 @@ from app.capabilities.ai_gateway import (
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
+# AI gateway 只允许返回卷级结构，避免 provider 自由发挥出应用层无法映射的字段。
 SKELETON_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {
@@ -47,6 +53,7 @@ SKELETON_SCHEMA: dict[str, Any] = {
     "additionalProperties": False,
 }
 
+# 章节展开只接收序号、标题和摘要，章节归属与状态由业务侧补齐。
 CHAPTER_EXPANSION_SCHEMA: dict[str, Any] = {
     "type": "object",
     "properties": {
@@ -73,6 +80,7 @@ class OutlineAiAdapter(OutlineAiPort):
     """实现大纲 AI port，屏蔽 AI gateway 请求格式和 profile 选择。"""
 
     def __init__(self, gateway: AiGatewayFacade) -> None:
+        """接收中性 AI gateway facade，保持业务侧不依赖 provider 细节。"""
         self._gateway = gateway
 
     def generate_skeleton(self, seed: Seed) -> list[SkeletonVolume]:
@@ -118,6 +126,11 @@ class OutlineAiAdapter(OutlineAiPort):
             )
             raise
         content = response.structured_content or {}
+        if "volumes" not in content:
+            logger.warning(
+                "outline_ai_skeleton_response_missing_volumes",
+                extra={"seed_id": str(seed.id), "profile": str(profile)},
+            )
         volumes = [
             SkeletonVolume(
                 skeleton_id=None,
@@ -183,6 +196,16 @@ class OutlineAiAdapter(OutlineAiPort):
             )
             raise
         content = response.structured_content or {}
+        if "chapters" not in content:
+            logger.warning(
+                "outline_ai_volume_response_missing_chapters",
+                extra={
+                    "seed_id": str(seed.id),
+                    "skeleton_id": str(skeleton.id),
+                    "volume_id": str(volume.id),
+                    "profile": str(profile),
+                },
+            )
         chapters = [
             ChapterSummary(
                 volume_id=volume.id,

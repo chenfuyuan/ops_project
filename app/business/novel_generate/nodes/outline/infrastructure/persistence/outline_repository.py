@@ -1,4 +1,9 @@
-"""大纲节点 SQLAlchemy repository 实现。"""
+"""大纲节点 SQLAlchemy repository 实现。
+
+本模块是 outline 领域 repository 的基础设施适配器，负责 ORM record 与领域模型之间
+的映射、事务提交和级联关系维护。业务核心只依赖 domain/repositories.py 中的协议，
+不应直接 import 本文件中的 record 或 session 细节。
+"""
 
 import logging
 from datetime import datetime
@@ -169,7 +174,11 @@ class OutlineRepositoryImpl(OutlineRepository):
             return self._seed_entity(record) if record is not None else None
 
     def save_skeleton(self, skeleton: Skeleton) -> Skeleton:
-        """保存骨架；同一 seed 只能保留一个当前骨架。"""
+        """保存骨架；同一 seed 只能保留一个当前骨架。
+
+        当重新生成骨架时，旧 outline 聚合视图会先失效；删除旧骨架前必须删除旧视图，
+        避免唯一约束和外键关系留下不一致的当前大纲。
+        """
         with self._session_factory() as session:
             existing = session.scalar(
                 select(OutlineSkeletonRecord).where(
@@ -186,6 +195,21 @@ class OutlineRepositoryImpl(OutlineRepository):
                 if existing_outline is not None:
                     session.delete(existing_outline)
                     session.flush()
+                    logger.info(
+                        "outline_existing_view_deleted_before_skeleton_replace",
+                        extra={
+                            "seed_id": str(skeleton.seed_id),
+                            "old_outline_id": existing_outline.id,
+                        },
+                    )
+                logger.info(
+                    "outline_existing_skeleton_replaced",
+                    extra={
+                        "seed_id": str(skeleton.seed_id),
+                        "old_skeleton_id": existing.id,
+                        "new_skeleton_id": str(skeleton.id),
+                    },
+                )
                 session.delete(existing)
                 session.flush()
             session.merge(self._skeleton_record(skeleton))
@@ -364,6 +388,7 @@ class OutlineRepositoryImpl(OutlineRepository):
             )
 
     def _delete_chapters_by_volume(self, session, volume_id: UUID) -> None:
+        """删除指定卷下的章节记录；调用方负责提交事务。"""
         records = session.scalars(
             select(OutlineChapterSummaryRecord).where(
                 OutlineChapterSummaryRecord.volume_id == str(volume_id)
@@ -371,8 +396,14 @@ class OutlineRepositoryImpl(OutlineRepository):
         ).all()
         for record in records:
             session.delete(record)
+        if records:
+            logger.debug(
+                "outline_chapter_records_deleted_in_transaction",
+                extra={"volume_id": str(volume_id), "chapter_count": len(records)},
+            )
 
     def _seed_record(self, seed: Seed) -> OutlineSeedRecord:
+        """把 Seed 领域实体映射为 ORM record。"""
         return OutlineSeedRecord(
             id=str(seed.id),
             title=seed.title,
@@ -386,6 +417,7 @@ class OutlineRepositoryImpl(OutlineRepository):
         )
 
     def _skeleton_record(self, skeleton: Skeleton) -> OutlineSkeletonRecord:
+        """把 Skeleton 聚合映射为 ORM record，并级联携带卷记录。"""
         return OutlineSkeletonRecord(
             id=str(skeleton.id),
             seed_id=str(skeleton.seed_id),
@@ -397,6 +429,7 @@ class OutlineRepositoryImpl(OutlineRepository):
         )
 
     def _volume_record(self, volume: SkeletonVolume) -> OutlineSkeletonVolumeRecord:
+        """把 SkeletonVolume 领域实体映射为 ORM record。"""
         return OutlineSkeletonVolumeRecord(
             id=str(volume.id),
             skeleton_id=str(volume.skeleton_id),
@@ -408,6 +441,7 @@ class OutlineRepositoryImpl(OutlineRepository):
         )
 
     def _chapter_record(self, chapter: ChapterSummary) -> OutlineChapterSummaryRecord:
+        """把 ChapterSummary 领域实体映射为 ORM record。"""
         return OutlineChapterSummaryRecord(
             id=str(chapter.id),
             volume_id=str(chapter.volume_id),
@@ -420,6 +454,7 @@ class OutlineRepositoryImpl(OutlineRepository):
         )
 
     def _outline_record(self, outline: Outline) -> OutlineRecord:
+        """把 Outline 聚合视图映射为 ORM record。"""
         return OutlineRecord(
             id=str(outline.id),
             seed_id=str(outline.seed_id),
@@ -430,6 +465,7 @@ class OutlineRepositoryImpl(OutlineRepository):
         )
 
     def _seed_entity(self, record: OutlineSeedRecord) -> Seed:
+        """把 ORM seed record 还原为领域实体。"""
         return Seed(
             id=UUID(record.id),
             title=record.title,
@@ -443,6 +479,7 @@ class OutlineRepositoryImpl(OutlineRepository):
         )
 
     def _skeleton_entity(self, record: OutlineSkeletonRecord) -> Skeleton:
+        """把 ORM skeleton record 及其卷记录还原为领域聚合。"""
         return Skeleton(
             id=UUID(record.id),
             seed_id=UUID(record.seed_id),
@@ -454,6 +491,7 @@ class OutlineRepositoryImpl(OutlineRepository):
         )
 
     def _volume_entity(self, record: OutlineSkeletonVolumeRecord) -> SkeletonVolume:
+        """把 ORM volume record 还原为领域实体。"""
         return SkeletonVolume(
             id=UUID(record.id),
             skeleton_id=UUID(record.skeleton_id),
@@ -465,6 +503,7 @@ class OutlineRepositoryImpl(OutlineRepository):
         )
 
     def _chapter_entity(self, record: OutlineChapterSummaryRecord) -> ChapterSummary:
+        """把 ORM chapter record 还原为领域实体。"""
         return ChapterSummary(
             id=UUID(record.id),
             volume_id=UUID(record.volume_id),
