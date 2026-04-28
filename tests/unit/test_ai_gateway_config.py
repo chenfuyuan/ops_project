@@ -51,19 +51,6 @@ class AiGatewayConfigTest(unittest.TestCase):
         self.assertEqual("gpt-compatible-small", profile.model)
         self.assertEqual("https://example.test/v1", provider.base_url)
 
-    def test_example_config_contains_outline_generation_profiles(self) -> None:
-        data = json.loads(
-            (
-                Path(__file__).resolve().parents[2]
-                / "config"
-                / "ai_gateway.example.json"
-            ).read_text()
-        )
-        profile_names = {profile["name"] for profile in data["profiles"]}
-
-        self.assertIn("outline-skeleton", profile_names)
-        self.assertIn("outline-chapter-expansion", profile_names)
-
     def test_repository_loads_structured_json_file(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "ai_gateway.json"

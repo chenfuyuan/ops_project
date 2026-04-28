@@ -23,13 +23,5 @@ class MigrationsConfigTest(unittest.TestCase):
 
         self.assertIn("COPY alembic.ini", dockerfile.read_text())
 
-    def test_outline_migration_exists(self) -> None:
-        migration = (
-            ROOT / "alembic" / "versions" / "20260426_0001_create_outline_tables.py"
-        )
-
-        self.assertTrue(migration.exists())
-
-
 if __name__ == "__main__":
     unittest.main()

@@ -9,26 +9,6 @@
       "cost_tier": "balanced",
       "timeout_seconds": 30,
       "retry_attempts": 1
-    },
-    {
-      "name": "outline-skeleton",
-      "provider": "default",
-      "model": "replace-with-model-name",
-      "capability_tags": ["structured"],
-      "context_window": 8192,
-      "cost_tier": "balanced",
-      "timeout_seconds": 60,
-      "retry_attempts": 1
-    },
-    {
-      "name": "outline-chapter-expansion",
-      "provider": "default",
-      "model": "replace-with-model-name",
-      "capability_tags": ["structured"],
-      "context_window": 8192,
-      "cost_tier": "balanced",
-      "timeout_seconds": 60,
-      "retry_attempts": 1
     }
   ],
   "providers": [
